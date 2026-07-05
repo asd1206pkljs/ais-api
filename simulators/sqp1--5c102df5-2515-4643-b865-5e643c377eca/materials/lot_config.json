@@ -1,0 +1,10 @@
+[
+    {
+        "lot_id": 0,
+        "max_wafer_count": 25
+    },
+    {
+        "lot_id": 1,
+        "max_wafer_count": 25
+    }
+]

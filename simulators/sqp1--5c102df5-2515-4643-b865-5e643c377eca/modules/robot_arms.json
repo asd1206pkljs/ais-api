@@ -1,0 +1,52 @@
+[
+    {
+        "name": "robot_arm0",
+        "display_name": "Robot #1",
+        "module_id": 0,
+        "module_type": "robot_arm",
+        "transfer_module": "efem",
+        "move_timetable": "modules/timetables/robot_arm0-move.json",
+        "get_timetable": "modules/timetables/robot_arm0-get.json",
+        "put_timetable": "modules/timetables/robot_arm0-put.json"
+    },
+    {
+        "name": "robot_arm1",
+        "display_name": "Robot #2",
+        "module_id": 1,
+        "module_type": "robot_arm",
+        "transfer_module": "vtm0",
+        "move_timetable": "modules/timetables/robot_arm1-move.json",
+        "get_timetable": "modules/timetables/robot_arm1-get.json",
+        "put_timetable": "modules/timetables/robot_arm1-put.json"
+    },
+    {
+        "name": "robot_arm2",
+        "display_name": "Robot #3",
+        "module_id": 2,
+        "module_type": "robot_arm",
+        "transfer_module": "vtm0",
+        "move_timetable": "modules/timetables/robot_arm2-move.json",
+        "get_timetable": "modules/timetables/robot_arm2-get.json",
+        "put_timetable": "modules/timetables/robot_arm2-put.json"
+    },
+    {
+        "name": "robot_arm3",
+        "display_name": "Robot #4",
+        "module_id": 3,
+        "module_type": "robot_arm",
+        "transfer_module": "vtm1",
+        "move_timetable": "modules/timetables/robot_arm3-move.json",
+        "get_timetable": "modules/timetables/robot_arm3-get.json",
+        "put_timetable": "modules/timetables/robot_arm3-put.json"
+    },
+    {
+        "name": "robot_arm4",
+        "display_name": "Robot #5",
+        "module_id": 4,
+        "module_type": "robot_arm",
+        "transfer_module": "vtm1",
+        "move_timetable": "modules/timetables/robot_arm4-move.json",
+        "get_timetable": "modules/timetables/robot_arm4-get.json",
+        "put_timetable": "modules/timetables/robot_arm4-put.json"
+    }
+]

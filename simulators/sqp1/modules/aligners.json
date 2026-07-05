@@ -1,0 +1,22 @@
+[
+    {
+        "name": "aligner0",
+        "display_name": "Aligner #1",
+        "module_id": 0,
+        "module_type": "aligner",
+        "transfer_module": "efem",
+        "align_timetable": "modules/timetables/aligner0-align.json",
+        "door_open_timetable": null,
+        "door_close_timetable": null
+    },
+    {
+        "name": "aligner1",
+        "display_name": "Aligner #2",
+        "module_id": 1,
+        "module_type": "aligner",
+        "transfer_module": "efem",
+        "align_timetable": "modules/timetables/aligner1-align.json",
+        "door_open_timetable": null,
+        "door_close_timetable": null
+    }
+]

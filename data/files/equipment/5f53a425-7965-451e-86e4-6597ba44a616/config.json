@@ -1,0 +1,196 @@
+{
+  "equipment_name": "aa",
+  "cluster_type": "dual_cluster",
+  "modules": [
+    {
+      "module_id": 49,
+      "module_type": "loadport",
+      "display_name": "LoadPort #1",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 50,
+      "module_type": "loadport",
+      "display_name": "LoadPort #2",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 51,
+      "module_type": "loadport",
+      "display_name": "LoadPort #3",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 52,
+      "module_type": "loadport",
+      "display_name": "LoadPort #4",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 53,
+      "module_type": "loadlock",
+      "display_name": "LoadLock #1",
+      "cluster": [
+        "efem",
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 54,
+      "module_type": "loadlock",
+      "display_name": "LoadLock #2",
+      "cluster": [
+        "efem",
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 55,
+      "module_type": "loadlock",
+      "display_name": "LoadLock #3",
+      "cluster": [
+        "efem",
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 56,
+      "module_type": "aligner",
+      "display_name": "Aligner #1",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 57,
+      "module_type": "aligner",
+      "display_name": "Aligner #2",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 58,
+      "module_type": "process_module",
+      "display_name": "Process Module #1",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 59,
+      "module_type": "process_module",
+      "display_name": "Process Module #2",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 60,
+      "module_type": "process_module",
+      "display_name": "Process Module #3",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 61,
+      "module_type": "process_module",
+      "display_name": "Process Module #4",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 62,
+      "module_type": "process_module",
+      "display_name": "Process Module #5",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 63,
+      "module_type": "process_module",
+      "display_name": "Process Module #6",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 64,
+      "module_type": "process_module",
+      "display_name": "Process Module #7",
+      "cluster": [
+        "vacuum_cluster_2"
+      ]
+    },
+    {
+      "module_id": 65,
+      "module_type": "process_module",
+      "display_name": "Process Module #8",
+      "cluster": [
+        "vacuum_cluster_2"
+      ]
+    },
+    {
+      "module_id": 66,
+      "module_type": "process_module",
+      "display_name": "Process Module #9",
+      "cluster": [
+        "vacuum_cluster_2"
+      ]
+    },
+    {
+      "module_id": 67,
+      "module_type": "process_module",
+      "display_name": "Process Module #10",
+      "cluster": [
+        "vacuum_cluster_2"
+      ]
+    },
+    {
+      "module_id": 68,
+      "module_type": "process_module",
+      "display_name": "Process Module #11",
+      "cluster": [
+        "vacuum_cluster_2"
+      ]
+    },
+    {
+      "module_id": 69,
+      "module_type": "process_module",
+      "display_name": "Process Module #12",
+      "cluster": [
+        "vacuum_cluster_2"
+      ]
+    },
+    {
+      "module_id": 70,
+      "module_type": "robot",
+      "display_name": "Robot #1",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 71,
+      "module_type": "robot",
+      "display_name": "Robot #2",
+      "cluster": [
+        "efem"
+      ]
+    }
+  ],
+  "timetables": {},
+  "flow_recipe_ids": [],
+  "process_recipe_ids": []
+}

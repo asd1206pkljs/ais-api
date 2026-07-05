@@ -1,0 +1,44 @@
+{
+    "loadlock_inslot0": [
+        3.0
+    ],
+    "loadlock_outslot0": [
+        3.0
+    ],
+    "loadlock_inslot1": [
+        3.0
+    ],
+    "loadlock_outslot1": [
+        3.0
+    ],
+    "loadlock_inslot2": [
+        3.0
+    ],
+    "loadlock_outslot2": [
+        3.0
+    ],
+    "process_module0": [
+        3.0
+    ],
+    "process_module1": [
+        3.0
+    ],
+    "process_module2": [
+        3.0
+    ],
+    "process_module3": [
+        3.0
+    ],
+    "process_module4": [
+        3.0
+    ],
+    "process_module5": [
+        3.0
+    ],
+    "buffer0": [
+        3.0
+    ],
+    "buffer1": [
+        3.0
+    ]
+}

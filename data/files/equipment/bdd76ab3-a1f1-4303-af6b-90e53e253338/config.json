@@ -1,0 +1,25 @@
+{
+  "equipment_name": "tt",
+  "cluster_type": "dual_cluster",
+  "modules": [
+    {
+      "module_id": 72,
+      "module_type": "loadport",
+      "display_name": "LoadPort #1",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 73,
+      "module_type": "loadport",
+      "display_name": "LoadPort #2",
+      "cluster": [
+        "efem"
+      ]
+    }
+  ],
+  "timetables": {},
+  "flow_recipe_ids": [],
+  "process_recipe_ids": []
+}

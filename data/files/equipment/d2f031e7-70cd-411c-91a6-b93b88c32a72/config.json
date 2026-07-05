@@ -1,0 +1,112 @@
+{
+  "equipment_name": "test",
+  "cluster_type": "dual_cluster",
+  "modules": [
+    {
+      "module_id": 74,
+      "module_type": "loadport",
+      "display_name": "LoadPort #1",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 75,
+      "module_type": "loadport",
+      "display_name": "LoadPort #2",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 76,
+      "module_type": "loadport",
+      "display_name": "LoadPort #3",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 77,
+      "module_type": "loadlock",
+      "display_name": "LoadLock #1",
+      "cluster": [
+        "efem",
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 78,
+      "module_type": "loadlock",
+      "display_name": "LoadLock #2",
+      "cluster": [
+        "efem",
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 79,
+      "module_type": "process_module",
+      "display_name": "Process Module #1",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 80,
+      "module_type": "process_module",
+      "display_name": "Process Module #2",
+      "cluster": [
+        "vacuum_cluster_2"
+      ]
+    },
+    {
+      "module_id": 81,
+      "module_type": "robot",
+      "display_name": "Robot #1",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 82,
+      "module_type": "robot",
+      "display_name": "Robot #2",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 83,
+      "module_type": "robot",
+      "display_name": "Robot #3",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 86,
+      "module_type": "robot",
+      "display_name": "Robot #4",
+      "cluster": [
+        "vacuum_cluster_2"
+      ]
+    },
+    {
+      "module_id": 87,
+      "module_type": "buffer",
+      "display_name": "Buffer #1",
+      "cluster": [
+        "vacuum_cluster_1",
+        "vacuum_cluster_2"
+      ]
+    }
+  ],
+  "timetables": {},
+  "flow_recipe_ids": [
+    "f34c4009-2d07-444e-bdad-11338eb0b772"
+  ],
+  "process_recipe_ids": [
+    "50a75915-ed6a-4431-8ca7-4c5c70ab0052"
+  ]
+}

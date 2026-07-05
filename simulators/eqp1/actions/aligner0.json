@@ -1,0 +1,14 @@
+[
+    {
+        "name": "align",
+        "module": "aligner0",
+        "dst_module": "loadlock_inslot0",
+        "type": "active"
+    },
+    {
+        "name": "align",
+        "module": "aligner0",
+        "dst_module": "loadlock_inslot1",
+        "type": "active"
+    }
+]

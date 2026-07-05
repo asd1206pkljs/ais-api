@@ -1,0 +1,12 @@
+[
+    {
+        "name": "LOT1",
+        "flow_recipe": "flow_recipe0",
+        "wafer_count": 25
+    },
+    {
+        "name": "LOT2",
+        "flow_recipe": "flow_recipe0",
+        "wafer_count": 25
+    }
+]

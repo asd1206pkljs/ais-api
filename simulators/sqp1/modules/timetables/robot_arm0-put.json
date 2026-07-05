@@ -1,0 +1,32 @@
+{
+    "loadport0": [
+        3.0
+    ],
+    "loadport1": [
+        3.0
+    ],
+    "loadlock_inslot0": [
+        3.0
+    ],
+    "loadlock_outslot0": [
+        3.0
+    ],
+    "loadlock_inslot1": [
+        3.0
+    ],
+    "loadlock_outslot1": [
+        3.0
+    ],
+    "loadlock_inslot2": [
+        3.0
+    ],
+    "loadlock_outslot2": [
+        3.0
+    ],
+    "aligner0": [
+        3.0
+    ],
+    "aligner1": [
+        3.0
+    ]
+}

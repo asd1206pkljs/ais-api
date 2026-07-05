@@ -1,0 +1,214 @@
+{
+  "equipment_name": "sqp1",
+  "cluster_type": "dual_cluster",
+  "modules": [
+    {
+      "module_id": 22,
+      "module_type": "loadport",
+      "display_name": "LoadPort #1",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 23,
+      "module_type": "loadport",
+      "display_name": "LoadPort #2",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 24,
+      "module_type": "loadlock",
+      "display_name": "LoadLock #1",
+      "cluster": [
+        "efem",
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 25,
+      "module_type": "loadlock",
+      "display_name": "LoadLock #2",
+      "cluster": [
+        "efem",
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 26,
+      "module_type": "loadlock",
+      "display_name": "LoadLock #3",
+      "cluster": [
+        "efem",
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 27,
+      "module_type": "aligner",
+      "display_name": "Aligner #1",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 28,
+      "module_type": "aligner",
+      "display_name": "Aligner #2",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 29,
+      "module_type": "process_module",
+      "display_name": "Process Module #1",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 30,
+      "module_type": "process_module",
+      "display_name": "Process Module #2",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 31,
+      "module_type": "process_module",
+      "display_name": "Process Module #3",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 32,
+      "module_type": "process_module",
+      "display_name": "Process Module #4",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 33,
+      "module_type": "process_module",
+      "display_name": "Process Module #5",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 34,
+      "module_type": "process_module",
+      "display_name": "Process Module #6",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 35,
+      "module_type": "robot",
+      "display_name": "Robot #1",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 36,
+      "module_type": "robot",
+      "display_name": "Robot #2",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 37,
+      "module_type": "robot",
+      "display_name": "Robot #3",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 38,
+      "module_type": "buffer",
+      "display_name": "Buffer #1",
+      "cluster": [
+        "vacuum_cluster_1",
+        "vacuum_cluster_2"
+      ]
+    },
+    {
+      "module_id": 39,
+      "module_type": "buffer",
+      "display_name": "Buffer #2",
+      "cluster": [
+        "vacuum_cluster_1",
+        "vacuum_cluster_2"
+      ]
+    },
+    {
+      "module_id": 40,
+      "module_type": "robot",
+      "display_name": "Robot #4",
+      "cluster": [
+        "vacuum_cluster_2"
+      ]
+    },
+    {
+      "module_id": 41,
+      "module_type": "robot",
+      "display_name": "Robot #5",
+      "cluster": [
+        "vacuum_cluster_2"
+      ]
+    },
+    {
+      "module_id": 42,
+      "module_type": "process_module",
+      "display_name": "Process Module #7",
+      "cluster": [
+        "vacuum_cluster_2"
+      ]
+    },
+    {
+      "module_id": 43,
+      "module_type": "process_module",
+      "display_name": "Process Module #8",
+      "cluster": [
+        "vacuum_cluster_2"
+      ]
+    },
+    {
+      "module_id": 44,
+      "module_type": "process_module",
+      "display_name": "Process Module #9",
+      "cluster": [
+        "vacuum_cluster_2"
+      ]
+    },
+    {
+      "module_id": 45,
+      "module_type": "process_module",
+      "display_name": "Process Module #10",
+      "cluster": [
+        "vacuum_cluster_2"
+      ]
+    }
+  ],
+  "timetables": {},
+  "flow_recipe_ids": [
+    "d875c24c-b5cd-4351-a924-564e1eed6f93"
+  ],
+  "process_recipe_ids": [
+    "da20cde8-b7f5-4b29-bcda-0ddccb290f58",
+    "ed9f6a4c-6785-4a9c-a029-7afe6492d520",
+    "6fcd1c2a-4b70-4e1b-9b73-44f31fd86abd",
+    "68959cf2-58d4-4c46-907f-c980856fd3f8",
+    "8820a96e-65d0-4b4e-9282-b6e4bf972d73"
+  ]
+}

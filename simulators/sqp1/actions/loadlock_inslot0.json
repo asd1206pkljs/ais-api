@@ -1,0 +1,20 @@
+[
+    {
+        "name": "pump",
+        "module": "loadlock_inslot0",
+        "dst_module": null,
+        "type": "active"
+    },
+    {
+        "name": "door_open",
+        "module": "loadlock_inslot0",
+        "dst_module": null,
+        "type": "passive"
+    },
+    {
+        "name": "door_close",
+        "module": "loadlock_inslot0",
+        "dst_module": null,
+        "type": "passive"
+    }
+]

@@ -1,0 +1,67 @@
+{
+  "flow_recipe_name": "flow1",
+  "num_process_steps": 4,
+  "process_recipe_steps": [
+    {
+      "step": 1,
+      "process_recipe_id": "1e8dd515-ff9f-4c76-a50b-b90fe5a3a295"
+    },
+    {
+      "step": 2,
+      "process_recipe_id": "fdf8b085-643c-44f7-907d-bdce54176711"
+    },
+    {
+      "step": 3,
+      "process_recipe_id": "a1d34959-c980-4a7a-b4df-3752e9a28e9b"
+    },
+    {
+      "step": 4,
+      "process_recipe_id": "3b45ba17-311b-42f6-8983-47f323e7342c"
+    }
+  ],
+  "module_sequence": [
+    [
+      "1",
+      "2",
+      "3"
+    ],
+    [
+      "6"
+    ],
+    [
+      "4",
+      "5"
+    ],
+    [
+      "8",
+      "10"
+    ],
+    [
+      "7",
+      "9"
+    ],
+    [
+      "15"
+    ],
+    [
+      "12",
+      "14"
+    ],
+    [
+      "11",
+      "13"
+    ],
+    [
+      "16"
+    ],
+    [
+      "4",
+      "5"
+    ],
+    [
+      "1",
+      "2",
+      "3"
+    ]
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "flow_recipe_name": "f1",
+  "num_process_steps": 5,
+  "process_recipe_steps": [
+    {
+      "step": 1,
+      "process_recipe_id": "da20cde8-b7f5-4b29-bcda-0ddccb290f58"
+    },
+    {
+      "step": 2,
+      "process_recipe_id": "ed9f6a4c-6785-4a9c-a029-7afe6492d520"
+    },
+    {
+      "step": 3,
+      "process_recipe_id": "6fcd1c2a-4b70-4e1b-9b73-44f31fd86abd"
+    },
+    {
+      "step": 4,
+      "process_recipe_id": "68959cf2-58d4-4c46-907f-c980856fd3f8"
+    },
+    {
+      "step": 5,
+      "process_recipe_id": "8820a96e-65d0-4b4e-9282-b6e4bf972d73"
+    }
+  ],
+  "module_sequence": [
+    [
+      "22",
+      "23"
+    ],
+    [
+      "28",
+      "27"
+    ],
+    [
+      "24",
+      "25",
+      "26"
+    ],
+    [
+      "31",
+      "34"
+    ],
+    [
+      "30",
+      "33"
+    ],
+    [
+      "29",
+      "32"
+    ],
+    [
+      "38"
+    ],
+    [
+      "43",
+      "45"
+    ],
+    [
+      "42",
+      "44"
+    ],
+    [
+      "39"
+    ],
+    [
+      "24",
+      "25",
+      "26"
+    ],
+    [
+      "22",
+      "23"
+    ]
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "equipment_name": "eqp2",
+  "cluster_type": "dual_cluster",
+  "modules": [
+    {
+      "module_id": 46,
+      "module_type": "loadport",
+      "display_name": "LoadPort #1",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 47,
+      "module_type": "loadport",
+      "display_name": "LoadPort #2",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 48,
+      "module_type": "loadport",
+      "display_name": "LoadPort #3",
+      "cluster": [
+        "efem"
+      ]
+    }
+  ],
+  "timetables": {},
+  "flow_recipe_ids": [],
+  "process_recipe_ids": []
+}

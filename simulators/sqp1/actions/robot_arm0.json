@@ -1,0 +1,74 @@
+[
+    {
+        "name": "move",
+        "module": "robot_arm0",
+        "dst_module": "aligner0",
+        "type": "active"
+    },
+    {
+        "name": "move",
+        "module": "robot_arm0",
+        "dst_module": "aligner1",
+        "type": "active"
+    },
+    {
+        "name": "move",
+        "module": "robot_arm0",
+        "dst_module": "loadlock_inslot0",
+        "type": "active"
+    },
+    {
+        "name": "move",
+        "module": "robot_arm0",
+        "dst_module": "loadlock_inslot1",
+        "type": "active"
+    },
+    {
+        "name": "move",
+        "module": "robot_arm0",
+        "dst_module": "loadlock_inslot2",
+        "type": "active"
+    },
+    {
+        "name": "move",
+        "module": "robot_arm0",
+        "dst_module": "loadlock_outslot0",
+        "type": "active"
+    },
+    {
+        "name": "move",
+        "module": "robot_arm0",
+        "dst_module": "loadlock_outslot1",
+        "type": "active"
+    },
+    {
+        "name": "move",
+        "module": "robot_arm0",
+        "dst_module": "loadlock_outslot2",
+        "type": "active"
+    },
+    {
+        "name": "move",
+        "module": "robot_arm0",
+        "dst_module": "loadport0",
+        "type": "active"
+    },
+    {
+        "name": "move",
+        "module": "robot_arm0",
+        "dst_module": "loadport1",
+        "type": "active"
+    },
+    {
+        "name": "get",
+        "module": "robot_arm0",
+        "dst_module": "robot_arm0",
+        "type": "passive"
+    },
+    {
+        "name": "put",
+        "module": "robot_arm0",
+        "dst_module": null,
+        "type": "passive"
+    }
+]

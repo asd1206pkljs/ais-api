@@ -1,0 +1,34 @@
+{
+  "flow_recipe_name": "New Flow Recipe",
+  "num_process_steps": 5,
+  "process_recipe_steps": [
+    {
+      "step": 1,
+      "process_recipe_id": "23b929f7-c435-473a-a097-052bf8a2f390"
+    },
+    {
+      "step": 2,
+      "process_recipe_id": "23b929f7-c435-473a-a097-052bf8a2f390"
+    }
+  ],
+  "module_sequence": [
+    [],
+    [
+      "88"
+    ],
+    [
+      "90"
+    ],
+    [
+      "92"
+    ],
+    [
+      "89"
+    ],
+    [
+      "104",
+      "105",
+      "106"
+    ]
+  ]
+}
