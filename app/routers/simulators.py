@@ -52,6 +52,20 @@ async def create_simulator(
     return APIResponse.ok(sim)
 
 
+@router.post("/{simulator_id}/copy", response_model=APIResponse[SimulatorRead])
+@limiter.limit("30/minute")
+async def copy_simulator(
+    request: Request,
+    simulator_id: uuid.UUID,
+    body: SimulatorCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: UserRead = Depends(get_current_user),
+):
+    svc = _get_service()
+    sim = await svc.copy(db, simulator_id, current_user.user_id, body.simulator_name)
+    return APIResponse.ok(sim)
+
+
 @router.get("/{simulator_id}", response_model=APIResponse[SimulatorRead])
 @limiter.limit("60/minute")
 async def get_simulator(

@@ -48,6 +48,20 @@ async def create_equipment(
     return APIResponse.ok(eq)
 
 
+@router.post("/{equipment_id}/copy", response_model=APIResponse[EquipmentRead])
+@limiter.limit("30/minute")
+async def copy_equipment(
+    request: Request,
+    equipment_id: uuid.UUID,
+    body: EquipmentCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: UserRead = Depends(get_current_user),
+):
+    svc = _get_service()
+    eq = await svc.copy(db, equipment_id, current_user.user_id, body.equipment_name)
+    return APIResponse.ok(eq)
+
+
 @router.get("/{equipment_id}", response_model=APIResponse[EquipmentRead])
 @limiter.limit("60/minute")
 async def get_equipment(

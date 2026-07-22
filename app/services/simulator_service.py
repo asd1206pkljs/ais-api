@@ -69,6 +69,38 @@ class SimulatorService:
         })
         return SimulatorRead.model_validate(simulator)
 
+    async def copy(
+        self,
+        session: AsyncSession,
+        simulator_id: uuid.UUID,
+        user_id: uuid.UUID,
+        new_name: str,
+    ) -> SimulatorRead:
+        """Copy a simulator: same equipment reference + a verbatim copy of its
+        config file (selected flows + module time configs), owned by ``user_id``."""
+        source = await self._repo.find_by_id(session, simulator_id)
+        if source is None:
+            raise NotFoundError("Simulator", str(simulator_id))
+        if not self._can_view(source, user_id) and not await is_admin(session, user_id):
+            raise AuthorizationError()
+
+        src_cfg = self._storage.read_json(source.simulator_path)
+        new_id = uuid.uuid4()
+        abs_path = self._storage.write_json(
+            self._storage.simulator_path(new_id), src_cfg)
+        owner_str = str(user_id)
+        simulator = await self._repo.create(session, {
+            "simulator_id": new_id,
+            "simulator_name": new_name,
+            "equipment_id": source.equipment_id,
+            "simulator_path": abs_path,
+            "owner_id": user_id,
+            "viewers": [owner_str],
+            "editors": [owner_str],
+            "save_status": source.save_status,
+        })
+        return SimulatorRead.model_validate(simulator)
+
     async def get(
         self, session: AsyncSession, simulator_id: uuid.UUID, user_id: uuid.UUID
     ) -> SimulatorRead:
