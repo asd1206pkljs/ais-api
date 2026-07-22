@@ -19,6 +19,7 @@ ais 학습 환경에서 직접 import 가능.
 from __future__ import annotations
 
 import json
+import random
 from collections import defaultdict
 from pathlib import Path
 
@@ -38,6 +39,7 @@ MODULE_TYPE_PREFIX = {
 }
 CLUSTER_ORDER = ["efem", "vacuum_cluster_1", "vacuum_cluster_2"]
 MAX_WAFER_COUNT = 25
+LOT_HISTORY_SIZE = 1000     # lot_history.json 엔트리 수 (flow_recipe 랜덤 샘플링)
 DEFAULT_MOVE_TIME = [5.0]   # timetable 미설정 시 robot 이동 기본값 (초)
 DEFAULT_GET_TIME  = [5.0]   # timetable 미설정 시 robot get 기본값 (초)
 DEFAULT_PUT_TIME  = [5.0]   # timetable 미설정 시 robot put 기본값 (초)
@@ -679,11 +681,10 @@ class EqpModelGenerator:
         ])
 
     def _gen_lot_history(self, out: Path) -> None:
-        lps = self._by_type("loadport")
-        flow = "flow_recipe0"
+        flows = [f"flow_recipe{i}" for i in range(len(self.flow_recipe_configs))] or ["flow_recipe0"]
         _write_json(out / "materials" / "lot_history.json", [
-            {"name": f"LOT{i + 1}", "flow_recipe": flow, "wafer_count": MAX_WAFER_COUNT}
-            for i in range(len(lps))
+            {"name": f"LOT{i + 1}", "flow_recipe": random.choice(flows), "wafer_count": MAX_WAFER_COUNT}
+            for i in range(LOT_HISTORY_SIZE)
         ])
 
     def _gen_actions(self, out: Path) -> None:
