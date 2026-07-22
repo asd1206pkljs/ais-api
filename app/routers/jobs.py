@@ -15,6 +15,7 @@ from app.schemas.job import (
     JobUpdate,
 )
 from app.schemas.user import UserRead
+from app.services import job_result_service
 from app.services.job_service import JobService
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
@@ -108,6 +109,66 @@ async def get_job(
     svc = _get_service()
     job = await svc.get(db, job_id, current_user.user_id)
     return APIResponse.ok(job)
+
+
+@router.get("/{job_id}/results/summary", response_model=APIResponse[list[dict]])
+@limiter.limit("60/minute")
+async def get_job_result_summary(
+    request: Request,
+    job_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: UserRead = Depends(get_current_user),
+):
+    """Training summary (scatter-plot points) from the job's result_path bundle."""
+    svc = _get_service()
+    job = await svc.get(db, job_id, current_user.user_id)
+    return APIResponse.ok(job_result_service.get_summary(job.result_path))
+
+
+@router.get("/{job_id}/results/episodes", response_model=APIResponse[list[str]])
+@limiter.limit("60/minute")
+async def list_job_result_episodes(
+    request: Request,
+    job_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: UserRead = Depends(get_current_user),
+):
+    """Episode names available in the job's result_path bundle (for gantt)."""
+    svc = _get_service()
+    job = await svc.get(db, job_id, current_user.user_id)
+    return APIResponse.ok(job_result_service.list_episodes(job.result_path))
+
+
+@router.get("/{job_id}/results/gantt-config", response_model=APIResponse[dict])
+@limiter.limit("60/minute")
+async def get_job_result_gantt_config(
+    request: Request,
+    job_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: UserRead = Depends(get_current_user),
+):
+    """exp-web's saved gantt row config from the job's result_path bundle ({} if none)."""
+    svc = _get_service()
+    job = await svc.get(db, job_id, current_user.user_id)
+    return APIResponse.ok(job_result_service.get_gantt_config(job.result_path))
+
+
+@router.get(
+    "/{job_id}/results/episodes/{ep_name}/logs",
+    response_model=APIResponse[list[dict]],
+)
+@limiter.limit("60/minute")
+async def get_job_result_episode_logs(
+    request: Request,
+    job_id: int,
+    ep_name: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: UserRead = Depends(get_current_user),
+):
+    """Gantt bars for one episode from the job's result_path bundle."""
+    svc = _get_service()
+    job = await svc.get(db, job_id, current_user.user_id)
+    return APIResponse.ok(job_result_service.get_episode_logs(job.result_path, ep_name))
 
 
 @router.put("/{job_id}", response_model=APIResponse[JobRead])
