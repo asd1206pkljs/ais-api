@@ -567,21 +567,32 @@ class EqpModelGenerator:
                     except ValueError:
                         continue
                 for (from_id, to_id), move_val in move_times.items():
-                    from_name = self.engine_name.get(from_id)
+                    # A loadlock expands to two engine positions (inslot/outslot).
+                    # Apply the user's move time to BOTH slots on the source AND
+                    # destination side, so inslot/outslot moves share one value
+                    # instead of the un-set slot falling back to DEFAULT_MOVE_TIME.
+                    from_names: list[str] = []
+                    if from_id in self.loadlock_pairs:
+                        from_names.extend(self.loadlock_pairs[from_id])
+                    elif from_id in self.engine_name:
+                        from_names.append(self.engine_name[from_id])
                     to_names: list[str] = []
                     if to_id in self.loadlock_pairs:
                         to_names.extend(self.loadlock_pairs[to_id])
                     elif to_id in self.engine_name:
                         to_names.append(self.engine_name[to_id])
-                    if not from_name or not to_names:
+                    if not from_names or not to_names:
                         continue
                     with_w = _time_value(move_val.get("withWafer"))
                     same = move_val.get("sameTimeRegardlessOfWafer", False)
                     without_w = with_w if same else _time_value(move_val.get("withoutWafer"))
-                    for to_name in to_names:
-                        if from_name not in move_data:
-                            move_data[from_name] = {}
-                        move_data[from_name][to_name] = [with_w, without_w]
+                    for from_name in from_names:
+                        for to_name in to_names:
+                            if from_name == to_name:
+                                continue
+                            if from_name not in move_data:
+                                move_data[from_name] = {}
+                            move_data[from_name][to_name] = [with_w, without_w]
 
                 get_times: dict[int, dict] = {
                     int(k): v for k, v in tt.get("getTimes", {}).items()

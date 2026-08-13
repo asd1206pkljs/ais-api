@@ -1,0 +1,50 @@
+[
+    {
+        "name": "move",
+        "module": "robot_arm4",
+        "dst_module": "buffer0",
+        "type": "active"
+    },
+    {
+        "name": "move",
+        "module": "robot_arm4",
+        "dst_module": "buffer1",
+        "type": "active"
+    },
+    {
+        "name": "move",
+        "module": "robot_arm4",
+        "dst_module": "process_module4",
+        "type": "active"
+    },
+    {
+        "name": "move",
+        "module": "robot_arm4",
+        "dst_module": "process_module5",
+        "type": "active"
+    },
+    {
+        "name": "move",
+        "module": "robot_arm4",
+        "dst_module": "process_module6",
+        "type": "active"
+    },
+    {
+        "name": "move",
+        "module": "robot_arm4",
+        "dst_module": "process_module7",
+        "type": "active"
+    },
+    {
+        "name": "get",
+        "module": "robot_arm4",
+        "dst_module": "robot_arm4",
+        "type": "passive"
+    },
+    {
+        "name": "put",
+        "module": "robot_arm4",
+        "dst_module": null,
+        "type": "passive"
+    }
+]

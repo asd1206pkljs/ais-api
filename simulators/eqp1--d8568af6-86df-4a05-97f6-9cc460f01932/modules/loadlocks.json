@@ -1,0 +1,62 @@
+[
+    [
+        {
+            "name": "loadlock_inslot0",
+            "display_name": "LoadLock #1",
+            "module_id": 0,
+            "module_type": "loadlock_inslot",
+            "transfer_module": [
+                "efem",
+                "vtm0"
+            ],
+            "door_open_timetable": "modules/timetables/loadlock0_inslot-door_open.json",
+            "door_close_timetable": "modules/timetables/loadlock0_inslot-door_close.json",
+            "pump_timetable": "modules/timetables/loadlock0-pump.json",
+            "vent_timetable": "modules/timetables/loadlock0-vent.json"
+        },
+        {
+            "name": "loadlock_outslot0",
+            "display_name": "LoadLock #1",
+            "module_id": 0,
+            "module_type": "loadlock_outslot",
+            "transfer_module": [
+                "efem",
+                "vtm0"
+            ],
+            "door_open_timetable": "modules/timetables/loadlock0_outslot-door_open.json",
+            "door_close_timetable": "modules/timetables/loadlock0_outslot-door_close.json",
+            "pump_timetable": "modules/timetables/loadlock0-pump.json",
+            "vent_timetable": "modules/timetables/loadlock0-vent.json"
+        }
+    ],
+    [
+        {
+            "name": "loadlock_inslot1",
+            "display_name": "LoadLock #2",
+            "module_id": 1,
+            "module_type": "loadlock_inslot",
+            "transfer_module": [
+                "efem",
+                "vtm0"
+            ],
+            "door_open_timetable": "modules/timetables/loadlock1_inslot-door_open.json",
+            "door_close_timetable": "modules/timetables/loadlock1_inslot-door_close.json",
+            "pump_timetable": "modules/timetables/loadlock1-pump.json",
+            "vent_timetable": "modules/timetables/loadlock1-vent.json"
+        },
+        {
+            "name": "loadlock_outslot1",
+            "display_name": "LoadLock #2",
+            "module_id": 1,
+            "module_type": "loadlock_outslot",
+            "transfer_module": [
+                "efem",
+                "vtm0"
+            ],
+            "door_open_timetable": "modules/timetables/loadlock1_outslot-door_open.json",
+            "door_close_timetable": "modules/timetables/loadlock1_outslot-door_close.json",
+            "pump_timetable": "modules/timetables/loadlock1-pump.json",
+            "vent_timetable": "modules/timetables/loadlock1-vent.json"
+        }
+    ]
+]

@@ -1,0 +1,28 @@
+[
+    {
+        "name": "buffer0",
+        "display_name": "Buffer #1",
+        "module_id": 0,
+        "module_type": "buffer",
+        "transfer_module": [
+            "vtm0",
+            "vtm1"
+        ],
+        "cooling_timetable": "modules/timetables/buffer0-cooling.json",
+        "door_open_timetable": null,
+        "door_close_timetable": null
+    },
+    {
+        "name": "buffer1",
+        "display_name": "Buffer #2",
+        "module_id": 1,
+        "module_type": "buffer",
+        "transfer_module": [
+            "vtm0",
+            "vtm1"
+        ],
+        "cooling_timetable": "modules/timetables/buffer1-cooling.json",
+        "door_open_timetable": null,
+        "door_close_timetable": null
+    }
+]

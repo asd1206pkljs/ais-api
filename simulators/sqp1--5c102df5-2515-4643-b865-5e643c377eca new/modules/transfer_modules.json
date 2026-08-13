@@ -1,0 +1,68 @@
+[
+    {
+        "name": "efem",
+        "display_name": "EFEM",
+        "module_id": 0,
+        "module_type": 1,
+        "static_modules": [
+            "loadport0",
+            "loadport1",
+            "loadport2",
+            "loadlock_inslot0",
+            "loadlock_outslot0",
+            "loadlock_inslot1",
+            "loadlock_outslot1",
+            "loadlock_inslot2",
+            "loadlock_outslot2",
+            "aligner0",
+            "aligner1"
+        ],
+        "robot_arms": [
+            "robot_arm0"
+        ]
+    },
+    {
+        "name": "vtm0",
+        "display_name": "VTM0",
+        "module_id": 1,
+        "module_type": 0,
+        "static_modules": [
+            "loadlock_inslot0",
+            "loadlock_outslot0",
+            "loadlock_inslot1",
+            "loadlock_outslot1",
+            "loadlock_inslot2",
+            "loadlock_outslot2",
+            "process_module0",
+            "process_module1",
+            "process_module2",
+            "process_module3",
+            "process_module4",
+            "process_module5",
+            "buffer0",
+            "buffer1"
+        ],
+        "robot_arms": [
+            "robot_arm1",
+            "robot_arm2"
+        ]
+    },
+    {
+        "name": "vtm1",
+        "display_name": "VTM1",
+        "module_id": 2,
+        "module_type": 0,
+        "static_modules": [
+            "buffer0",
+            "buffer1",
+            "process_module6",
+            "process_module7",
+            "process_module8",
+            "process_module9"
+        ],
+        "robot_arms": [
+            "robot_arm3",
+            "robot_arm4"
+        ]
+    }
+]

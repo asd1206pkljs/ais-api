@@ -1,0 +1,466 @@
+{
+    "loadport0": {
+        "loadport1": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadport2": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadlock_inslot0": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadlock_outslot0": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadlock_inslot1": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadlock_outslot1": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "aligner0": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ]
+    },
+    "loadport1": {
+        "loadport0": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadport2": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadlock_inslot0": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadlock_outslot0": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadlock_inslot1": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadlock_outslot1": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "aligner0": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ]
+    },
+    "loadport2": {
+        "loadport0": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadport1": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadlock_inslot0": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadlock_outslot0": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadlock_inslot1": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadlock_outslot1": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "aligner0": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ]
+    },
+    "loadlock_inslot0": {
+        "loadport0": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadport1": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadport2": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadlock_outslot0": [
+            [
+                5.0
+            ],
+            [
+                5.0
+            ]
+        ],
+        "loadlock_inslot1": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadlock_outslot1": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "aligner0": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ]
+    },
+    "loadlock_outslot0": {
+        "loadport0": [
+            [
+                5.0
+            ],
+            [
+                5.0
+            ]
+        ],
+        "loadport1": [
+            [
+                5.0
+            ],
+            [
+                5.0
+            ]
+        ],
+        "loadport2": [
+            [
+                5.0
+            ],
+            [
+                5.0
+            ]
+        ],
+        "loadlock_inslot0": [
+            [
+                5.0
+            ],
+            [
+                5.0
+            ]
+        ],
+        "loadlock_inslot1": [
+            [
+                5.0
+            ],
+            [
+                5.0
+            ]
+        ],
+        "loadlock_outslot1": [
+            [
+                5.0
+            ],
+            [
+                5.0
+            ]
+        ],
+        "aligner0": [
+            [
+                5.0
+            ],
+            [
+                5.0
+            ]
+        ]
+    },
+    "loadlock_inslot1": {
+        "loadport0": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadport1": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadport2": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadlock_inslot0": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadlock_outslot0": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadlock_outslot1": [
+            [
+                5.0
+            ],
+            [
+                5.0
+            ]
+        ],
+        "aligner0": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ]
+    },
+    "loadlock_outslot1": {
+        "loadport0": [
+            [
+                5.0
+            ],
+            [
+                5.0
+            ]
+        ],
+        "loadport1": [
+            [
+                5.0
+            ],
+            [
+                5.0
+            ]
+        ],
+        "loadport2": [
+            [
+                5.0
+            ],
+            [
+                5.0
+            ]
+        ],
+        "loadlock_inslot0": [
+            [
+                5.0
+            ],
+            [
+                5.0
+            ]
+        ],
+        "loadlock_outslot0": [
+            [
+                5.0
+            ],
+            [
+                5.0
+            ]
+        ],
+        "loadlock_inslot1": [
+            [
+                5.0
+            ],
+            [
+                5.0
+            ]
+        ],
+        "aligner0": [
+            [
+                5.0
+            ],
+            [
+                5.0
+            ]
+        ]
+    },
+    "aligner0": {
+        "loadport0": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadport1": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadport2": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadlock_inslot0": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadlock_outslot0": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadlock_inslot1": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ],
+        "loadlock_outslot1": [
+            [
+                2.0
+            ],
+            [
+                2.0
+            ]
+        ]
+    }
+}

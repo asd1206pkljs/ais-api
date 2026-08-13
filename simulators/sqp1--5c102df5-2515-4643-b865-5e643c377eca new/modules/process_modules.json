@@ -1,0 +1,92 @@
+[
+    {
+        "name": "process_module0",
+        "display_name": "Process Module #1",
+        "module_id": 0,
+        "module_type": "process_module",
+        "transfer_module": "vtm0",
+        "door_open_timetable": "modules/timetables/process_module0-door_open.json",
+        "door_close_timetable": "modules/timetables/process_module0-door_close.json"
+    },
+    {
+        "name": "process_module1",
+        "display_name": "Process Module #2",
+        "module_id": 1,
+        "module_type": "process_module",
+        "transfer_module": "vtm0",
+        "door_open_timetable": "modules/timetables/process_module1-door_open.json",
+        "door_close_timetable": "modules/timetables/process_module1-door_close.json"
+    },
+    {
+        "name": "process_module2",
+        "display_name": "Process Module #3",
+        "module_id": 2,
+        "module_type": "process_module",
+        "transfer_module": "vtm0",
+        "door_open_timetable": "modules/timetables/process_module2-door_open.json",
+        "door_close_timetable": "modules/timetables/process_module2-door_close.json"
+    },
+    {
+        "name": "process_module3",
+        "display_name": "Process Module #4",
+        "module_id": 3,
+        "module_type": "process_module",
+        "transfer_module": "vtm0",
+        "door_open_timetable": "modules/timetables/process_module3-door_open.json",
+        "door_close_timetable": "modules/timetables/process_module3-door_close.json"
+    },
+    {
+        "name": "process_module4",
+        "display_name": "Process Module #5",
+        "module_id": 4,
+        "module_type": "process_module",
+        "transfer_module": "vtm0",
+        "door_open_timetable": "modules/timetables/process_module4-door_open.json",
+        "door_close_timetable": "modules/timetables/process_module4-door_close.json"
+    },
+    {
+        "name": "process_module5",
+        "display_name": "Process Module #6",
+        "module_id": 5,
+        "module_type": "process_module",
+        "transfer_module": "vtm0",
+        "door_open_timetable": "modules/timetables/process_module5-door_open.json",
+        "door_close_timetable": "modules/timetables/process_module5-door_close.json"
+    },
+    {
+        "name": "process_module6",
+        "display_name": "Process Module #7",
+        "module_id": 6,
+        "module_type": "process_module",
+        "transfer_module": "vtm1",
+        "door_open_timetable": "modules/timetables/process_module6-door_open.json",
+        "door_close_timetable": "modules/timetables/process_module6-door_close.json"
+    },
+    {
+        "name": "process_module7",
+        "display_name": "Process Module #8",
+        "module_id": 7,
+        "module_type": "process_module",
+        "transfer_module": "vtm1",
+        "door_open_timetable": "modules/timetables/process_module7-door_open.json",
+        "door_close_timetable": "modules/timetables/process_module7-door_close.json"
+    },
+    {
+        "name": "process_module8",
+        "display_name": "Process Module #9",
+        "module_id": 8,
+        "module_type": "process_module",
+        "transfer_module": "vtm1",
+        "door_open_timetable": "modules/timetables/process_module8-door_open.json",
+        "door_close_timetable": "modules/timetables/process_module8-door_close.json"
+    },
+    {
+        "name": "process_module9",
+        "display_name": "Process Module #10",
+        "module_id": 9,
+        "module_type": "process_module",
+        "transfer_module": "vtm1",
+        "door_open_timetable": "modules/timetables/process_module9-door_open.json",
+        "door_close_timetable": "modules/timetables/process_module9-door_close.json"
+    }
+]

@@ -1,0 +1,8 @@
+{
+    "eqp_name": "sqp1",
+    "use_same_recipe_in_lot": true,
+    "num_loadports": 2,
+    "num_loadlocks": 3,
+    "max_wafer_count": 25,
+    "max_proceed_time": 10
+}

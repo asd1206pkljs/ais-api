@@ -1,0 +1,47 @@
+{
+  "flow_recipe_name": "f1",
+  "num_process_steps": 2,
+  "process_recipe_steps": [
+    {
+      "step": 1,
+      "process_recipe_id": "64266be6-573c-4a32-b89d-1df79a4ac0df"
+    },
+    {
+      "step": 2,
+      "process_recipe_id": "64266be6-573c-4a32-b89d-1df79a4ac0df"
+    }
+  ],
+  "module_sequence": [
+    [
+      "107",
+      "108",
+      "109"
+    ],
+    [
+      "110",
+      "111"
+    ],
+    [
+      "112"
+    ],
+    [
+      "118"
+    ],
+    [
+      "113",
+      "112"
+    ],
+    [
+      "118"
+    ],
+    [
+      "110",
+      "111"
+    ],
+    [
+      "107",
+      "108",
+      "109"
+    ]
+  ]
+}
