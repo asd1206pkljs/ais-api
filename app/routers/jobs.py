@@ -9,6 +9,7 @@ from app.schemas.common import APIResponse
 from app.schemas.job import (
     JobAccessUserRequest,
     JobAdminRead,
+    JobClaimRequest,
     JobCreate,
     JobRead,
     JobStatusUpdate,
@@ -80,6 +81,25 @@ async def admin_get_job(
     """Internal-only: fetch a single job (with owner email and result_path)."""
     svc = _get_service()
     job = await svc.admin_get(db, job_id)
+    return APIResponse.ok(job)
+
+
+@router.post("/admin/{job_id}/claim", response_model=APIResponse[JobRead])
+@limiter.limit("60/minute")
+async def admin_claim_job(
+    request: Request,
+    job_id: int,
+    body: JobClaimRequest,
+    db: AsyncSession = Depends(get_db),
+    _: None = Depends(require_internal),
+):
+    """Internal-only: atomically claim a pending job (pending→training + claimed_by).
+
+    409 if the job is no longer pending — e.g. another training server claimed it
+    first. Launchers must use this instead of PATCH /status to avoid double-claims.
+    """
+    svc = _get_service()
+    job = await svc.admin_claim(db, job_id, body.claimed_by)
     return APIResponse.ok(job)
 
 

@@ -1,6 +1,7 @@
 import uuid
 
 from fastapi import APIRouter, Depends, Query, Request
+from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import get_current_user, get_db, get_internal_or_user
@@ -117,6 +118,28 @@ async def generate_simulator(
     svc = _get_service()
     output_dir = await svc.generate(db, simulator_id, user_id)
     return APIResponse.ok({"output_dir": output_dir})
+
+
+@router.post("/{simulator_id}/bundle")
+@limiter.limit("10/minute")
+async def bundle_simulator(
+    request: Request,
+    simulator_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    user_id: uuid.UUID = Depends(get_internal_or_user),
+):
+    """eqp_model을 생성해 tar.gz로 응답 (원격 학습 서버용).
+
+    `/generate`는 API 서버 로컬 경로를 반환하므로 같은 호스트에서만 쓸 수 있고,
+    분리된 학습 서버는 이 엔드포인트로 번들을 내려받아 로컬에 풀어 사용한다.
+    """
+    svc = _get_service()
+    filename, data = await svc.generate_bundle(db, simulator_id, user_id)
+    return Response(
+        content=data,
+        media_type="application/gzip",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.get("/{simulator_id}/config", response_model=APIResponse[SimulatorConfig])

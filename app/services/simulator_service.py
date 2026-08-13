@@ -1,3 +1,5 @@
+import io
+import tarfile
 import uuid
 from pathlib import Path
 
@@ -231,6 +233,25 @@ class SimulatorService:
         gen = EqpModelGenerator(eq_config, flow_recipe_configs, process_recipe_configs)
         gen.generate(output_dir)
         return output_dir
+
+    async def generate_bundle(
+        self,
+        session: AsyncSession,
+        simulator_id: uuid.UUID,
+        user_id: uuid.UUID,
+    ) -> tuple[str, bytes]:
+        """eqp_model을 생성한 뒤 tar.gz 번들로 묶어 (파일명, bytes) 반환.
+
+        원격 학습 서버가 API 서버의 디스크 경로 대신 번들을 내려받아
+        로컬에 풀어 쓸 수 있게 한다 (멀티서버 구조).
+        """
+        output_dir = await self.generate(session, simulator_id, user_id)
+        buf = io.BytesIO()
+        with tarfile.open(fileobj=buf, mode="w:gz") as tar:
+            # arcname을 고정해 클라이언트가 항상 `eqp_model/`로 풀 수 있게 함
+            tar.add(output_dir, arcname="eqp_model")
+        filename = f"{Path(output_dir).name}.tar.gz"
+        return filename, buf.getvalue()
 
     async def delete(
         self, session: AsyncSession, simulator_id: uuid.UUID, user_id: uuid.UUID

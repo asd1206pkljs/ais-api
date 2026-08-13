@@ -45,6 +45,7 @@ class JobAdminRead(BaseModel):
     simulator_id: uuid.UUID
     job_name: str
     job_status: JobStatus
+    claimed_by: str | None = None
     result_path: str | None = None
     created_at: datetime
     updated_at: datetime
@@ -52,6 +53,11 @@ class JobAdminRead(BaseModel):
 
 class JobStatusUpdate(BaseModel):
     job_status: JobStatus
+
+
+class JobClaimRequest(BaseModel):
+    claimed_by: str = Field(..., min_length=1, max_length=255,
+                            description="Claiming server id (AIS_SERVER_ID or hostname)")
 
 
 class JobAccessUserRequest(BaseModel):

@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.enums import JobStatus
 from app.exceptions import (
     AuthorizationError,
+    ConflictError,
     InsufficientCreditsError,
     NotFoundError,
 )
@@ -193,6 +194,7 @@ class JobService:
                 "simulator_id": job.simulator_id,
                 "job_name": job.job_name,
                 "job_status": job.job_status,
+                "claimed_by": job.claimed_by,
                 "result_path": job.result_path,
                 "created_at": job.created_at,
                 "updated_at": job.updated_at,
@@ -219,10 +221,34 @@ class JobService:
             "simulator_id": job.simulator_id,
             "job_name": job.job_name,
             "job_status": job.job_status,
+            "claimed_by": job.claimed_by,
             "result_path": job.result_path,
             "created_at": job.created_at,
             "updated_at": job.updated_at,
         })
+
+    async def admin_claim(
+        self, session: AsyncSession, job_id: int, claimed_by: str
+    ) -> JobRead:
+        """Internal-only: atomically claim a pending job for a training server.
+
+        Raises ConflictError if the job is not pending anymore (e.g. another
+        server claimed it first).
+        """
+        job = await self._repo.find_by_id(session, job_id)
+        if job is None:
+            raise NotFoundError("Job", str(job_id))
+
+        claimed = await self._repo.try_claim(session, job_id, claimed_by)
+        if not claimed:
+            await session.refresh(job)
+            raise ConflictError(
+                f"Job {job_id} is not pending (current: {job.job_status}, "
+                f"claimed_by: {job.claimed_by})"
+            )
+        await session.commit()
+        updated = await self._repo.find_by_id(session, job_id)
+        return JobRead.model_validate(updated)
 
     async def admin_set_status(
         self, session: AsyncSession, job_id: int, data: JobStatusUpdate
@@ -230,9 +256,11 @@ class JobService:
         job = await self._repo.find_by_id(session, job_id)
         if job is None:
             raise NotFoundError("Job", str(job_id))
-        updated = await self._repo.update(
-            session, job_id, {"job_status": data.job_status.value}
-        )
+        values: dict = {"job_status": data.job_status.value}
+        if data.job_status == JobStatus.PENDING:
+            # pending으로 되돌리면 선점 기록도 해제 (다른 서버가 다시 잡을 수 있음)
+            values["claimed_by"] = None
+        updated = await self._repo.update(session, job_id, values)
         return JobRead.model_validate(updated)
 
     async def delete(

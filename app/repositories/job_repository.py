@@ -141,3 +141,19 @@ class JobRepository(BaseRepository[Job]):
             .values(job_status=to_status.value)
         )
         return result.rowcount > 0
+
+    async def try_claim(
+        self, session: AsyncSession, job_id: int, claimed_by: str
+    ) -> bool:
+        """Atomically claim a pending job for a training server.
+
+        pending → training 전이와 `claimed_by` 기록을 조건부 UPDATE 한 번으로
+        수행한다. False면 다른 서버가 먼저 잡았거나 job이 pending이 아님.
+        Caller is responsible for commit/rollback.
+        """
+        result = await session.execute(
+            update(Job)
+            .where(Job.job_id == job_id, Job.job_status == JobStatus.PENDING.value)
+            .values(job_status=JobStatus.TRAINING.value, claimed_by=claimed_by)
+        )
+        return result.rowcount > 0
