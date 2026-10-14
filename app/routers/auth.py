@@ -1,4 +1,5 @@
 import logging
+import uuid
 
 from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,6 +24,9 @@ from app.schemas.password_reset import (
     ResetPasswordRequest,
 )
 from app.schemas.user import UserCreate
+from app.enums import audit_action as act
+from app.services.audit_context import Actor
+from app.services.audit_service import audit
 from app.services.auth_cookie import clear_auth_cookies, set_auth_cookies
 from app.services.auth_service import decode_access_token
 from app.services.email_verification_service import EmailVerificationService
@@ -68,7 +72,7 @@ async def register(
         user_email=body.email,
         user_password=body.password,
         user_company=body.company,
-    ))
+    ), consents=body.consents)
     try:
         _get_verification_service().send(user.user_id, user.user_email)
     except Exception:
@@ -146,6 +150,8 @@ async def logout(
             payload = None  # expired or malformed — nothing left to revoke
         if payload is not None:
             await _revocations.revoke(db, payload)
+            await audit.record(db, act.LOGOUT, actor=Actor(
+                user_id=uuid.UUID(payload["sub"]), email=payload.get("email"), actor_type="user"))
     clear_auth_cookies(response)
     return APIResponse.ok(MessageResponse(message="Logged out"))
 

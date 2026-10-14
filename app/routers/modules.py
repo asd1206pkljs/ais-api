@@ -27,7 +27,7 @@ async def create_module(
     current_user: UserRead = Depends(get_current_user),
 ):
     svc = _get_service()
-    module = await svc.create(db, body)
+    module = await svc.create(db, current_user.user_id, body)
     return APIResponse.ok(module)
 
 
@@ -42,7 +42,7 @@ async def list_modules(
     current_user: UserRead = Depends(get_current_user),
 ):
     svc = _get_service()
-    modules, meta = await svc.list_all(db, module_type, skip, limit)
+    modules, meta = await svc.list_for_user(db, current_user.user_id, module_type, skip, limit)
     return APIResponse.ok(modules, meta)
 
 
@@ -55,7 +55,7 @@ async def get_module(
     current_user: UserRead = Depends(get_current_user),
 ):
     svc = _get_service()
-    module = await svc.get(db, module_id)
+    module = await svc.get(db, module_id, current_user.user_id)
     return APIResponse.ok(module)
 
 
@@ -69,7 +69,7 @@ async def update_module(
     current_user: UserRead = Depends(get_current_user),
 ):
     svc = _get_service()
-    module = await svc.update(db, module_id, body)
+    module = await svc.update(db, module_id, current_user.user_id, body)
     return APIResponse.ok(module)
 
 
@@ -82,5 +82,5 @@ async def delete_module(
     current_user: UserRead = Depends(get_current_user),
 ):
     svc = _get_service()
-    await svc.delete(db, module_id)
+    await svc.delete(db, module_id, current_user.user_id)
     return APIResponse.ok(None)

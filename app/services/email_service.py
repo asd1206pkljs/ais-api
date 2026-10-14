@@ -42,6 +42,30 @@ def send_password_reset_email(to_email: str, reset_url: str) -> None:
     logger.warning("Unknown EMAIL_BACKEND: %s — email not sent", backend)
 
 
+def send_plain_email(to_email: str, subject: str, body: str) -> None:
+    """Deliver a plain-text message through the configured backend.
+
+    Raises RuntimeError when no working backend is configured.
+    """
+    backend = settings.EMAIL_BACKEND.lower()
+    if backend == "console":
+        logger.info("Email (console backend)\n  to: %s\n  subject: %s\n%s", to_email, subject, body)
+        return
+    if backend == "smtp":
+        if not settings.SMTP_HOST:
+            logger.error("EMAIL_BACKEND=smtp but SMTP_HOST is not configured")
+            raise RuntimeError("Email backend is not configured")
+        msg = EmailMessage()
+        msg["Subject"] = subject
+        msg["From"] = settings.EMAIL_FROM
+        msg["To"] = to_email
+        msg.set_content(body)
+        _send_via_smtp(msg)
+        return
+    logger.warning("Unknown EMAIL_BACKEND: %s — email not sent", backend)
+    raise RuntimeError("Email backend is not configured")
+
+
 def _send_via_smtp(msg: EmailMessage) -> None:
     with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as smtp:
         if settings.SMTP_USE_TLS:

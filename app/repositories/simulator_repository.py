@@ -1,9 +1,10 @@
 import uuid
 
-from sqlalchemy import or_, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.simulator import Simulator
+from app.repositories.access_filters import shared_with
 from app.repositories.base import BaseRepository
 
 
@@ -29,21 +30,22 @@ class SimulatorRepository(BaseRepository[Simulator]):
         return list(result.scalars().all())
 
     async def find_accessible_by_user(
-        self, session: AsyncSession, user_id: uuid.UUID, skip: int = 0, limit: int = 100
+        self,
+        session: AsyncSession,
+        user_id: uuid.UUID,
+        principals: list[str],
+        skip: int = 0,
+        limit: int = 100,
     ) -> list[Simulator]:
-        uid_str = str(user_id)
+        """Owned by the user or shared with one of `principals` (user, groups, public)."""
         result = await session.execute(
             select(Simulator)
             .where(
                 Simulator.save_status != 'deleted',
-                or_(
-                    Simulator.owner_id == user_id,
-                    Simulator.viewers.contains([uid_str]),
-                    Simulator.editors.contains([uid_str]),
-                    Simulator.viewers.contains(["*"]),
-                    Simulator.editors.contains(["*"]),
-                ),
+                (Simulator.owner_id == user_id)
+                | shared_with(Simulator.simulator_id, "simulator", principals),
             )
+            .order_by(Simulator.created_at.desc())
             .offset(skip)
             .limit(limit)
         )
@@ -53,7 +55,11 @@ class SimulatorRepository(BaseRepository[Simulator]):
         self, session: AsyncSession, skip: int = 0, limit: int = 100
     ) -> list[Simulator]:
         result = await session.execute(
-            select(Simulator).where(Simulator.save_status != 'deleted').offset(skip).limit(limit)
+            select(Simulator)
+            .where(Simulator.save_status != 'deleted')
+            .order_by(Simulator.created_at.desc())
+            .offset(skip)
+            .limit(limit)
         )
         return list(result.scalars().all())
 

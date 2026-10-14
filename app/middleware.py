@@ -9,8 +9,10 @@ from slowapi.util import get_remote_address
 from starlette.responses import Response
 
 from app.config import settings
+from app.services.audit_context import RequestContext, reset, set_request_context
 
-limiter = Limiter(key_func=get_remote_address)
+# DISABLE_RATE_LIMIT=true turns the per-IP limiter off (tests / local tooling only).
+limiter = Limiter(key_func=get_remote_address, enabled=not settings.DISABLE_RATE_LIMIT)
 
 
 def _cors_aware_handler(request: Request, response: Response) -> Response:
@@ -45,6 +47,14 @@ def setup_middleware(app: FastAPI) -> None:
     async def add_request_id(request: Request, call_next):
         request_id = str(uuid.uuid4())
         request.state.request_id = request_id
-        response = await call_next(request)
+        set_request_context(RequestContext(
+            request_id=request_id,
+            ip_address=get_remote_address(request),
+            user_agent=request.headers.get("user-agent"),
+        ))
+        try:
+            response = await call_next(request)
+        finally:
+            reset()
         response.headers["X-Request-ID"] = request_id
         return response

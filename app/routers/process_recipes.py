@@ -29,7 +29,7 @@ async def create_process_recipe(
     current_user: UserRead = Depends(get_current_user),
 ):
     svc = _get_service()
-    recipe = await svc.create(db, body)
+    recipe = await svc.create(db, current_user.user_id, body)
     return APIResponse.ok(recipe)
 
 
@@ -43,7 +43,7 @@ async def list_process_recipes(
     current_user: UserRead = Depends(get_current_user),
 ):
     svc = _get_service()
-    recipes, meta = await svc.list_all(db, skip, limit)
+    recipes, meta = await svc.list_for_user(db, current_user.user_id, skip, limit)
     return APIResponse.ok(recipes, meta)
 
 
@@ -56,7 +56,7 @@ async def get_process_recipe(
     current_user: UserRead = Depends(get_current_user),
 ):
     svc = _get_service()
-    recipe = await svc.get(db, recipe_id)
+    recipe = await svc.get(db, recipe_id, current_user.user_id)
     return APIResponse.ok(recipe)
 
 
@@ -69,7 +69,7 @@ async def get_process_recipe_config(
     current_user: UserRead = Depends(get_current_user),
 ):
     svc = _get_service()
-    config = await svc.get_config(db, recipe_id)
+    config = await svc.get_config(db, recipe_id, current_user.user_id)
     return APIResponse.ok(config)
 
 
@@ -83,7 +83,7 @@ async def update_process_recipe_config(
     current_user: UserRead = Depends(get_current_user),
 ):
     svc = _get_service()
-    config = await svc.update_config(db, recipe_id, body)
+    config = await svc.update_config(db, recipe_id, current_user.user_id, body)
     return APIResponse.ok(config)
 
 
@@ -97,7 +97,7 @@ async def update_process_recipe(
     current_user: UserRead = Depends(get_current_user),
 ):
     svc = _get_service()
-    recipe = await svc.update(db, recipe_id, body)
+    recipe = await svc.update(db, recipe_id, current_user.user_id, body)
     return APIResponse.ok(recipe)
 
 
@@ -110,5 +110,5 @@ async def delete_process_recipe(
     current_user: UserRead = Depends(get_current_user),
 ):
     svc = _get_service()
-    await svc.delete(db, recipe_id)
+    await svc.delete(db, recipe_id, current_user.user_id)
     return APIResponse.ok(None)

@@ -1,10 +1,16 @@
+import logging
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 from app.exceptions import (
+    AccountDisabledError,
     AccountLockedError,
+    AccountPendingApprovalError,
     AuthenticationError,
     AuthorizationError,
     ConflictError,
@@ -53,6 +59,14 @@ def setup_exception_handlers(app: FastAPI) -> None:
     async def email_not_verified_handler(request: Request, exc: EmailNotVerifiedError):
         return _make_response(request, 403, str(exc))
 
+    @app.exception_handler(AccountPendingApprovalError)
+    async def account_pending_handler(request: Request, exc: AccountPendingApprovalError):
+        return _make_response(request, 403, str(exc))
+
+    @app.exception_handler(AccountDisabledError)
+    async def account_disabled_handler(request: Request, exc: AccountDisabledError):
+        return _make_response(request, 403, str(exc))
+
     @app.exception_handler(ConflictError)
     async def conflict_handler(request: Request, exc: ConflictError):
         return _make_response(request, 409, str(exc))
@@ -74,4 +88,9 @@ def setup_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(Exception)
     async def internal_error_handler(request: Request, exc: Exception):
+        # Details stay in the server log (with the request id); clients get a generic message.
+        logger.exception(
+            "unhandled error request_id=%s path=%s",
+            getattr(request.state, "request_id", None), request.url.path,
+        )
         return _make_response(request, 500, "Internal server error")

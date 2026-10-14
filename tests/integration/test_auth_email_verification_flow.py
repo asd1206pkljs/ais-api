@@ -3,6 +3,8 @@ from unittest.mock import patch
 from urllib.parse import parse_qs, urlparse
 
 import pytest
+
+from tests.conftest import CONSENTS
 from sqlalchemy import select
 
 from app.models.user import User
@@ -23,12 +25,12 @@ async def _rows_for(db_session, email: str) -> list[User]:
 
 @pytest.mark.asyncio
 async def test_signup_requires_email_verification_before_login(client, db_session):
-    email = "flow.user@example.com"
+    email = "flow.user@auto.example.com"  # allow-listed domain: active right after verification
 
     # 1. Sign up with mixed-case email → stored lowercase, unverified, no token issued.
     with patch(SEND) as send:
         res = await client.post("/auth/register", json={
-            "user_name": "Flow", "email": "Flow.User@Example.COM", "password": PASSWORD,
+            "user_name": "Flow", "email": "Flow.User@Auto.Example.COM", "password": PASSWORD, "consents": CONSENTS,
         })
     assert res.status_code == 200, res.text
     assert "access_token" not in res.json()["data"]
@@ -38,7 +40,7 @@ async def test_signup_requires_email_verification_before_login(client, db_sessio
     assert user.approved is False
 
     # 2. Correct password but unverified → 403 with a stable, code-friendly message.
-    res = await client.post("/auth/login", json={"email": "FLOW.USER@example.com", "password": PASSWORD})
+    res = await client.post("/auth/login", json={"email": "FLOW.USER@auto.example.com", "password": PASSWORD})
     assert res.status_code == 403
     assert res.json()["error"] == "Email not verified"
 
@@ -50,7 +52,7 @@ async def test_signup_requires_email_verification_before_login(client, db_sessio
     # 4. Someone else (or the same person) may sign up again while unverified.
     with patch(SEND):
         res = await client.post("/auth/register", json={
-            "user_name": "Flow2", "email": email, "password": "Other456!",
+            "user_name": "Flow2", "email": email, "password": "Other456!", "consents": CONSENTS,
         })
     assert res.status_code == 200, res.text
     assert len(await _rows_for(db_session, email)) == 2
@@ -64,7 +66,7 @@ async def test_signup_requires_email_verification_before_login(client, db_sessio
     assert user.user_name == "Flow"
 
     # 6. Now login works (any case) and the token is accepted by protected routes.
-    res = await client.post("/auth/login", json={"email": "Flow.User@Example.com", "password": PASSWORD})
+    res = await client.post("/auth/login", json={"email": "Flow.User@Auto.Example.com", "password": PASSWORD})
     assert res.status_code == 200, res.text
     access = res.json()["data"]["access_token"]
     res = await client.get("/users/me", headers={"Authorization": f"Bearer {access}"})
@@ -74,7 +76,7 @@ async def test_signup_requires_email_verification_before_login(client, db_sessio
     # 7. A verified email can no longer be registered again — in any case.
     with patch(SEND) as send:
         res = await client.post("/auth/register", json={
-            "user_name": "Dup", "email": "flow.USER@example.com", "password": PASSWORD,
+            "user_name": "Dup", "email": "flow.USER@auto.example.com", "password": PASSWORD, "consents": CONSENTS,
         })
     assert res.status_code == 409
     send.assert_not_called()
@@ -95,7 +97,7 @@ async def test_resend_verification_targets_pending_signup(client, db_session):
     email = "pending.only@example.com"
     with patch(SEND):
         res = await client.post("/auth/register", json={
-            "user_name": "P", "email": email, "password": PASSWORD,
+            "user_name": "P", "email": email, "password": PASSWORD, "consents": CONSENTS,
         })
     assert res.status_code == 200, res.text
 
@@ -118,7 +120,7 @@ async def test_register_rolls_back_when_email_cannot_be_sent(client, db_session)
     email = "unsendable@example.com"
     with patch(SEND, side_effect=RuntimeError("smtp down")):
         res = await client.post("/auth/register", json={
-            "user_name": "U", "email": email, "password": PASSWORD,
+            "user_name": "U", "email": email, "password": PASSWORD, "consents": CONSENTS,
         })
     assert res.status_code == 500
     assert await _rows_for(db_session, email) == []

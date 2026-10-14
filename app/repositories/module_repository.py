@@ -1,10 +1,11 @@
 import uuid
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.enums import ModuleType
 from app.models.module import Module
+from app.repositories.access_filters import accessible_equipment_ids, shared_with
 from app.repositories.base import BaseRepository
 
 
@@ -16,6 +17,51 @@ class ModuleRepository(BaseRepository[Module]):
         result = await session.execute(select(Module).where(Module.module_id == entity_id))
         return result.scalar_one_or_none()
 
+    @staticmethod
+    def _accessible_filter(user_id: uuid.UUID, principals: list[str]):
+        """Owned, shared directly, or attached to an equipment the user may view."""
+        return (
+            (Module.owner_id == user_id)
+            | shared_with(Module.module_id, "module", principals)
+            | Module.equipment_id.in_(accessible_equipment_ids(user_id, principals))
+        )
+
+    @staticmethod
+    def _type_filter(module_type: ModuleType | None) -> list:
+        return [Module.module_type == module_type] if module_type else []
+
+    async def find_accessible(
+        self,
+        session: AsyncSession,
+        user_id: uuid.UUID,
+        principals: list[str],
+        module_type: ModuleType | None = None,
+        skip: int = 0,
+        limit: int = 100,
+    ) -> list[Module]:
+        result = await session.execute(
+            select(Module)
+            .where(self._accessible_filter(user_id, principals), *self._type_filter(module_type))
+            .order_by(Module.module_id)
+            .offset(skip)
+            .limit(limit)
+        )
+        return list(result.scalars().all())
+
+    async def count_accessible(
+        self,
+        session: AsyncSession,
+        user_id: uuid.UUID,
+        principals: list[str],
+        module_type: ModuleType | None = None,
+    ) -> int:
+        result = await session.execute(
+            select(func.count())
+            .select_from(Module)
+            .where(self._accessible_filter(user_id, principals), *self._type_filter(module_type))
+        )
+        return result.scalar_one()
+
     async def find_by_type(
         self, session: AsyncSession, module_type: ModuleType, skip: int = 0, limit: int = 100
     ) -> list[Module]:
@@ -24,16 +70,45 @@ class ModuleRepository(BaseRepository[Module]):
         )
         return list(result.scalars().all())
 
+    async def count_by_type(self, session: AsyncSession, module_type: ModuleType | None) -> int:
+        result = await session.execute(
+            select(func.count()).select_from(Module).where(*self._type_filter(module_type))
+        )
+        return result.scalar_one()
+
+    async def find_by_ids(self, session: AsyncSession, ids: list[int]) -> list[Module]:
+        if not ids:
+            return []
+        result = await session.execute(select(Module).where(Module.module_id.in_(ids)))
+        return list(result.scalars().all())
+
+    async def find_unowned(self, session: AsyncSession) -> list[Module]:
+        result = await session.execute(select(Module).where(Module.owner_id.is_(None)))
+        return list(result.scalars().all())
+
     async def sync_equipment_link(
-        self, session: AsyncSession, equipment_id: uuid.UUID, module_ids: list[int]
+        self,
+        session: AsyncSession,
+        equipment_id: uuid.UUID,
+        module_ids: list[int],
+        owner_id: uuid.UUID | None = None,
     ) -> None:
-        """config에 있는 module들은 equipment_id를 연결하고, 제거된 module들은 NULL로 해제."""
+        """config에 있는 module들은 equipment_id를 연결하고, 제거된 module들은 NULL로 해제.
+
+        Modules without an owner inherit the equipment owner. Commits.
+        """
         if module_ids:
             await session.execute(
                 update(Module)
                 .where(Module.module_id.in_(module_ids))
                 .values(equipment_id=equipment_id)
             )
+            if owner_id is not None:
+                await session.execute(
+                    update(Module)
+                    .where(Module.module_id.in_(module_ids), Module.owner_id.is_(None))
+                    .values(owner_id=owner_id)
+                )
         await session.execute(
             update(Module)
             .where(

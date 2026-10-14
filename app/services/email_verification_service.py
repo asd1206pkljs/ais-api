@@ -9,7 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.exceptions import ConflictError, ValidationError
 from app.models.user import User
+from app.enums import audit_action as act
 from app.repositories.user_repository import UserRepository
+from app.services.activation_service import ActivationService
+from app.services.audit_context import Actor
+from app.services.audit_service import AuditService, audit
 from app.services.email_service import send_verification_email
 
 PURPOSE = "email_verify"
@@ -42,8 +46,15 @@ def _decode_token(token: str) -> uuid.UUID:
 
 
 class EmailVerificationService:
-    def __init__(self, repo: UserRepository):
+    def __init__(
+        self,
+        repo: UserRepository,
+        activation: ActivationService | None = None,
+        audit_svc: AuditService = audit,
+    ):
         self._repo = repo
+        self._activation = activation or ActivationService(user_repo=repo, audit_svc=audit_svc)
+        self._audit = audit_svc
 
     def send(self, user_id: uuid.UUID, email: str) -> None:
         """Email a verification link for a pending sign-up."""
@@ -75,6 +86,10 @@ class EmailVerificationService:
         if user.approved:
             return
         await self._approve(session, user)
+        actor = Actor(user_id=user.user_id, email=user.user_email, actor_type="user")
+        await self._audit.record(session, act.EMAIL_VERIFIED, target_user_id=user.user_id, actor=actor)
+        # Verified ≠ allowed in: apply the sign-up approval policy.
+        await self._activation.on_email_verified(session, user)
 
     async def _approve(self, session: AsyncSession, user: User) -> None:
         if await self._repo.find_by_email(session, user.user_email) is not None:

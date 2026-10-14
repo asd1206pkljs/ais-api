@@ -1,11 +1,12 @@
 import uuid
 
-from sqlalchemy import func, or_, select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.enums import JobStatus
 from app.models.job import Job
 from app.models.user import User
+from app.repositories.access_filters import shared_with
 from app.repositories.base import BaseRepository
 
 
@@ -86,19 +87,21 @@ class JobRepository(BaseRepository[Job]):
         )
         return result.scalar_one()
 
+    @staticmethod
+    def _accessible_filter(user_id: uuid.UUID, principals: list[str]):
+        return (Job.user_id == user_id) | shared_with(Job.job_id, "job", principals)
+
     async def find_accessible_by_user(
-        self, session: AsyncSession, user_id: uuid.UUID, skip: int = 0, limit: int = 100
+        self,
+        session: AsyncSession,
+        user_id: uuid.UUID,
+        principals: list[str],
+        skip: int = 0,
+        limit: int = 100,
     ) -> list[Job]:
-        uid_str = str(user_id)
         result = await session.execute(
             select(Job)
-            .where(
-                or_(
-                    Job.user_id == user_id,
-                    Job.viewers.contains([uid_str]),
-                    Job.viewers.contains(["*"]),
-                ),
-            )
+            .where(self._accessible_filter(user_id, principals))
             .order_by(Job.created_at.desc())
             .offset(skip)
             .limit(limit)
@@ -106,19 +109,10 @@ class JobRepository(BaseRepository[Job]):
         return list(result.scalars().all())
 
     async def count_accessible_by_user(
-        self, session: AsyncSession, user_id: uuid.UUID
+        self, session: AsyncSession, user_id: uuid.UUID, principals: list[str]
     ) -> int:
-        uid_str = str(user_id)
         result = await session.execute(
-            select(func.count())
-            .select_from(Job)
-            .where(
-                or_(
-                    Job.user_id == user_id,
-                    Job.viewers.contains([uid_str]),
-                    Job.viewers.contains(["*"]),
-                ),
-            )
+            select(func.count()).select_from(Job).where(self._accessible_filter(user_id, principals))
         )
         return result.scalar_one()
 

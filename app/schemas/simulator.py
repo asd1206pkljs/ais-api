@@ -17,7 +17,6 @@ class SimulatorRead(BaseModel):
     simulator_id: uuid.UUID
     simulator_name: str
     equipment_id: uuid.UUID | None
-    simulator_path: str
     owner_id: uuid.UUID
     viewers: list[str] = []
     editors: list[str] = []

@@ -10,6 +10,9 @@ from app.config import settings
 from app.exceptions import ValidationError
 from app.repositories.user_repository import UserRepository
 from app.services.auth_service import hash_password
+from app.enums import audit_action as act
+from app.services.audit_context import Actor
+from app.services.audit_service import AuditService, audit
 from app.services.email_service import send_password_reset_email
 from app.services.login_throttle_service import LoginThrottleService
 
@@ -42,9 +45,12 @@ def _issue_token(user_id: uuid.UUID, password_hash: str) -> str:
 
 
 class PasswordResetService:
-    def __init__(self, repo: UserRepository, throttle: LoginThrottleService):
+    def __init__(
+        self, repo: UserRepository, throttle: LoginThrottleService, audit_svc: AuditService = audit
+    ):
         self._repo = repo
         self._throttle = throttle
+        self._audit = audit_svc
 
     async def request_reset(self, session: AsyncSession, email: str) -> None:
         """Send a password-reset link if a verified account exists for `email`.
@@ -58,6 +64,7 @@ class PasswordResetService:
             return
         token = _issue_token(user.user_id, user.user_password)
         send_password_reset_email(user.user_email, _build_reset_url(token))
+        await self._audit.record(session, act.PASSWORD_RESET_REQUESTED, target_user_id=user.user_id)
 
     async def consume_token(
         self, session: AsyncSession, token: str, new_password: str
@@ -80,6 +87,10 @@ class PasswordResetService:
             "token_version": user.token_version + 1,
         })
         await self._throttle.clear(session, user.user_email)
+        await self._audit.record(
+            session, act.PASSWORD_RESET, target_user_id=user_id,
+            actor=Actor(user_id=user.user_id, email=user.user_email, actor_type="user"),
+        )
 
     @staticmethod
     def _decode(token: str) -> tuple[uuid.UUID, str]:

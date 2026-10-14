@@ -23,14 +23,14 @@ class JobRead(BaseModel):
     job_name: str
     job_status: JobStatus
     viewers: list[str] = []
-    result_path: str | None = None
     created_at: datetime
     updated_at: datetime
 
 
 class JobUpdate(BaseModel):
+    # Status is never set by the owner: only request-cancel/resume and the
+    # training servers (internal API) move a job between states.
     job_name: str | None = Field(None, min_length=1, max_length=255)
-    job_status: JobStatus | None = None
 
 
 class JobAdminRead(BaseModel):

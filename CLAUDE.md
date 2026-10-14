@@ -133,3 +133,21 @@ the process recipe file format is as follows
     "user_added_process_modules": [1, 2, 3]
 }
 
+
+
+## Multi-user security model (2026-10, 과업지시서 B-1~B-5)
+
+Full design + deploy procedure: `docs/SECURITY_MODEL.md`. Short version for anyone touching the code:
+
+- `users.role` (`admin`|`user`) and `users.status` (`pending_approval`|`active`|`disabled`) are the source of truth;
+  `ADMIN_EMAILS` only bootstraps. Only `active` accounts pass `get_current_user`. `require_admin` guards `/admin/*`.
+- Sharing lives in `resource_shares` (user / group / public principals, view|edit). The old JSONB `viewers`/`editors`
+  columns are gone; the Read schemas still expose `viewers`/`editors`, computed from shares (non-owners only see their own id).
+- Every access decision goes through `app/services/access.py` (`AccessPolicy`). Recipes and modules carry `owner_id` and
+  inherit access from the equipment that references them (`equipment_id`). Admins get metadata only, never content.
+- Config files under `FILE_STORAGE_BASE_PATH` are encrypted (`app/services/crypto.py`); `DATA_ENCRYPTION_KEY` is required at startup.
+- `audit_logs` is append-only (DB triggers); record actions through `app/services/audit_service.py`.
+- Requests (`user_requests`) replace the manual sign-up approval / credit top-up emails; see `app/services/request_service.py`.
+- Migration `a7c3e1d9f204` + `python -m app.tasks.migrate_ownership` + `python -m app.tasks.encrypt_files` move existing data over.
+- Contracts that must stay: `/jobs/admin/*` and `/simulators/{id}/bundle` for the training launcher (`JobAdminRead` keeps
+  `result_path`/`user_email`), and the `--AUTO-<job_id>` experiment folder naming.

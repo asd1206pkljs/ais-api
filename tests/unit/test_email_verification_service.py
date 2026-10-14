@@ -44,8 +44,13 @@ def repo():
 
 
 @pytest.fixture
-def service(repo):
-    return EmailVerificationService(repo)
+def activation():
+    return AsyncMock()
+
+
+@pytest.fixture
+def service(repo, activation):
+    return EmailVerificationService(repo, activation, AsyncMock())
 
 
 @pytest.fixture
@@ -110,6 +115,15 @@ async def test_consume_approves_user_and_removes_other_pending(service, repo, se
         session, user.user_email, exclude_user_id=user.user_id
     )
     session.commit.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_consume_applies_signup_policy_after_approval(service, repo, activation, session):
+    user = _make_user()
+    repo.find_by_id.return_value = user
+    repo.find_by_email.return_value = None
+    await service.consume_token(session, _token(user.user_id))
+    activation.on_email_verified.assert_awaited_once_with(session, user)
 
 
 @pytest.mark.asyncio

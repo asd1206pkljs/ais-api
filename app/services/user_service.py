@@ -3,14 +3,20 @@ from datetime import datetime, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.enums import SharePrincipalType, UserStatus
+from app.enums import audit_action as act
 from app.exceptions import (
+    AccountDisabledError,
+    AccountPendingApprovalError,
     AuthenticationError,
     ConflictError,
     EmailNotVerifiedError,
     NotFoundError,
 )
 from app.models.user import User
+from app.repositories.resource_share_repository import ResourceShareRepository
 from app.repositories.user_repository import UserRepository
+from app.schemas.consent import ConsentInput
 from app.schemas.user import (
     CreditTransactionResult,
     UserCreate,
@@ -23,6 +29,9 @@ from app.services.auth_service import (
     hash_password,
     verify_password,
 )
+from app.services.audit_context import Actor
+from app.services.audit_service import AuditService, audit
+from app.services.consent_service import ConsentService
 from app.services.login_throttle_service import LoginThrottleService
 
 
@@ -39,17 +48,30 @@ def _password_matches(user: User | None, password: str) -> bool:
 
 
 class UserService:
-    def __init__(self, repo: UserRepository, throttle: LoginThrottleService):
+    def __init__(
+        self,
+        repo: UserRepository,
+        throttle: LoginThrottleService,
+        consents: ConsentService | None = None,
+        audit_svc: AuditService = audit,
+        share_repo: ResourceShareRepository | None = None,
+    ):
         self._repo = repo
         self._throttle = throttle
+        self._consents = consents or ConsentService()
+        self._audit = audit_svc
+        self._shares = share_repo or ResourceShareRepository()
 
-    async def register(self, session: AsyncSession, data: UserCreate) -> UserRead:
-        """Create an unverified account.
+    async def register(
+        self, session: AsyncSession, data: UserCreate, consents: ConsentInput | None = None
+    ) -> UserRead:
+        """Create an unverified account and record the accepted legal documents.
 
         Only an *approved* account blocks re-registration. Unverified sign-ups
         for the same email are allowed so someone else's pending registration
         can never lock the real owner out; they are cleaned up on verification.
         """
+        accepted = self._consents.validate_registration(consents)
         existing = await self._repo.find_by_email(session, data.user_email)
         if existing is not None:
             raise ConflictError("Email already registered")
@@ -59,8 +81,23 @@ class UserService:
             "user_password": hash_password(data.user_password),
             "user_company": data.user_company,
             "approved": False,
+            "status": UserStatus.PENDING_APPROVAL.value,
         })
+        await self._consents.record(session, user.user_id, accepted)
+        await session.commit()
+        actor = Actor(user_id=user.user_id, email=user.user_email, actor_type="user")
+        await self._audit.record(session, act.REGISTER, target_user_id=user.user_id, actor=actor)
+        if accepted is not None:
+            await self._audit.record(session, act.CONSENT_ACCEPTED, target_user_id=user.user_id,
+                                     actor=actor, details=accepted.model_dump())
         return UserRead.model_validate(user)
+
+    @staticmethod
+    def _require_active(user: User) -> None:
+        if user.status == UserStatus.DISABLED.value:
+            raise AccountDisabledError()
+        if user.status != UserStatus.ACTIVE.value:
+            raise AccountPendingApprovalError()
 
     async def authenticate(self, session: AsyncSession, email: str, password: str) -> UserRead:
         """Verify credentials against the verified account for `email`.
@@ -71,8 +108,16 @@ class UserService:
         await self._throttle.check_not_locked(session, email)
         user = await self._repo.find_by_email(session, email)
         if _password_matches(user, password):
+            self._require_active(user)
             await self._throttle.clear(session, email)
-            return await self._record_login(session, user)
+            logged_in = await self._record_login(session, user)
+            await self._audit.record(
+                session, act.LOGIN_SUCCESS, target_user_id=user.user_id,
+                actor=Actor(user_id=user.user_id, email=user.user_email, actor_type="user"),
+            )
+            return logged_in
+        await self._audit.record(session, act.LOGIN_FAILURE, outcome="failure",
+                                 details={"email": email})
         # Counts toward lockout; raises AccountLockedError if this attempt tripped it.
         await self._throttle.record_failure(session, email)
         # Only reveal "not verified" to someone who proves they own a pending
@@ -120,12 +165,22 @@ class UserService:
         updated = await self._repo.update(session, user_id, update_data)
         if updated is None:
             raise NotFoundError("User", str(user_id))
+        await self._audit.record(
+            session, act.PASSWORD_CHANGED if "user_password" in update_data else act.ACCOUNT_UPDATED,
+            target_user_id=user_id,
+            details={k: v for k, v in update_data.items() if k not in ("user_password", "token_version")},
+        )
         return UserRead.model_validate(updated)
 
     async def delete(self, session: AsyncSession, user_id: uuid.UUID) -> None:
+        """Delete the account. Owned resources cascade in the database; grants
+        made *to* this user are removed explicitly (no FK on principal_id)."""
+        await self._shares.delete_for_principal(session, SharePrincipalType.USER.value, str(user_id))
+        await self._shares.delete_for_resources_owned_by(session, user_id)
         deleted = await self._repo.delete(session, user_id)
         if not deleted:
             raise NotFoundError("User", str(user_id))
+        await self._audit.record(session, act.ACCOUNT_DELETED, target_user_id=user_id)
 
     async def change_password(
         self,
@@ -146,6 +201,7 @@ class UserService:
         })
         if updated is None:
             raise NotFoundError("User", str(user_id))
+        await self._audit.record(session, act.PASSWORD_CHANGED, target_user_id=user_id)
         return UserRead.model_validate(updated)
 
     async def purchase_credits(
@@ -159,6 +215,8 @@ class UserService:
         updated = await self._repo.find_by_id(session, user_id)
         if updated is None:
             raise NotFoundError("User", str(user_id))
+        await self._audit.record(session, act.CREDITS_PURCHASED, target_user_id=user_id,
+                                 details={"quantity": quantity, "total_paid_krw": quantity * CREDIT_PRICE_KRW})
         return CreditTransactionResult(
             user_credits=updated.user_credits,
             added=quantity,

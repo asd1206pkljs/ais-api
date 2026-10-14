@@ -7,21 +7,33 @@ from app.config import settings
 from app.exception_handlers import setup_exception_handlers
 from app.middleware import setup_middleware
 from app.routers import (
+    admin,
     auth,
     contact,
     equipment,
     flow_recipes,
+    groups,
     jobs,
+    legal,
     modules,
     process_recipes,
+    shares,
     simulators,
     users,
 )
+from app.services.crypto import cipher_from_settings
 from app.tasks.cleanup import start_background_cleanup
+
+
+def validate_runtime_settings() -> None:
+    """Fail fast on a mis-configured deployment instead of 500-ing later."""
+    if settings.ENCRYPT_DATA_AT_REST:
+        cipher_from_settings()  # raises DataEncryptionError when the key is missing/invalid
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    validate_runtime_settings()
     # Hourly purge of expired pending sign-ups, revoked tokens and lockout counters.
     cleanup = start_background_cleanup() if settings.ENABLE_BACKGROUND_CLEANUP else None
     try:
@@ -53,6 +65,10 @@ def create_app() -> FastAPI:
     app.include_router(process_recipes.router)
     app.include_router(simulators.router)
     app.include_router(contact.router)
+    app.include_router(groups.router)
+    app.include_router(shares.router)
+    app.include_router(admin.router)
+    app.include_router(legal.router)
 
     return app
 

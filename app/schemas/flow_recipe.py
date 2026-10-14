@@ -16,7 +16,8 @@ class FlowRecipeRead(BaseModel):
 
     flow_recipe_id: uuid.UUID
     flow_recipe_name: str
-    flow_recipe_path: str
+    owner_id: uuid.UUID | None = None
+    equipment_id: uuid.UUID | None = None
     save_status: SaveStatus
     created_at: datetime
     updated_at: datetime

@@ -35,6 +35,16 @@ class User(Base):
     approved: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=False, server_default=text("false")
     )
+    # Platform-wide role (UserRole). Group-level roles live in group_members.
+    role: Mapped[str] = mapped_column(
+        String(32), nullable=False, default="user", server_default=text("'user'")
+    )
+    # Account lifecycle after verification (UserStatus): pending_approval |
+    # active | disabled. Only `active` accounts may sign in.
+    status: Mapped[str] = mapped_column(
+        String(32), nullable=False, default="pending_approval",
+        server_default=text("'pending_approval'"),
+    )
     # Embedded in every access token as `ver`; bumping it invalidates all of
     # the user's outstanding tokens (password change / reset).
     token_version: Mapped[int] = mapped_column(

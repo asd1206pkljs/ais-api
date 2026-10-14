@@ -1,9 +1,10 @@
 import uuid
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.equipment import Equipment
+from app.repositories.access_filters import shared_with
 from app.repositories.base import BaseRepository
 
 
@@ -21,10 +22,10 @@ class EquipmentRepository(BaseRepository[Equipment]):
         self, session: AsyncSession, skip: int = 0, limit: int = 100
     ) -> list[Equipment]:
         # admin 목록 조회 경로. soft-delete(save_status == 'deleted') 된 장비는 제외한다.
-        # (base.find_all 은 필터가 없어, 오버라이드하지 않으면 admin 에게 삭제 장비가 되살아난다)
         result = await session.execute(
             select(Equipment)
             .where(Equipment.save_status != 'deleted')
+            .order_by(Equipment.created_at.desc())
             .offset(skip)
             .limit(limit)
         )
@@ -41,23 +42,35 @@ class EquipmentRepository(BaseRepository[Equipment]):
         )
         return list(result.scalars().all())
 
+    def _accessible_filter(self, user_id: uuid.UUID, principals: list[str]):
+        return (
+            Equipment.save_status != 'deleted',
+            (Equipment.owner_id == user_id)
+            | shared_with(Equipment.equipment_id, "equipment", principals),
+        )
+
     async def find_accessible_by_user(
-        self, session: AsyncSession, user_id: uuid.UUID, skip: int = 0, limit: int = 100
+        self,
+        session: AsyncSession,
+        user_id: uuid.UUID,
+        principals: list[str],
+        skip: int = 0,
+        limit: int = 100,
     ) -> list[Equipment]:
-        uid_str = str(user_id)
+        """Owned by the user or shared with one of `principals` (user, groups, public)."""
         result = await session.execute(
             select(Equipment)
-            .where(
-                Equipment.save_status != 'deleted',
-                or_(
-                    Equipment.owner_id == user_id,
-                    Equipment.viewers.contains([uid_str]),
-                    Equipment.editors.contains([uid_str]),
-                    Equipment.viewers.contains(["*"]),
-                    Equipment.editors.contains(["*"]),
-                ),
-            )
+            .where(*self._accessible_filter(user_id, principals))
+            .order_by(Equipment.created_at.desc())
             .offset(skip)
             .limit(limit)
         )
         return list(result.scalars().all())
+
+    async def count_accessible_by_user(
+        self, session: AsyncSession, user_id: uuid.UUID, principals: list[str]
+    ) -> int:
+        result = await session.execute(
+            select(func.count()).select_from(Equipment).where(*self._accessible_filter(user_id, principals))
+        )
+        return result.scalar_one()

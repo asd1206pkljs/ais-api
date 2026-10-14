@@ -1,4 +1,5 @@
 import uuid
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import Response
@@ -117,7 +118,8 @@ async def generate_simulator(
 ):
     svc = _get_service()
     output_dir = await svc.generate(db, simulator_id, user_id)
-    return APIResponse.ok({"output_dir": output_dir})
+    # Only the model name leaves the server; absolute paths are internal.
+    return APIResponse.ok({"eqp_model": Path(output_dir).name})
 
 
 @router.post("/{simulator_id}/bundle")

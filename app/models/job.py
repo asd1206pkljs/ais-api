@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, func
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -29,7 +29,6 @@ class Job(Base):
     # 이 job을 선점(claim)한 학습 서버 식별자 (AIS_SERVER_ID 또는 hostname).
     # 멀티서버 환경에서 두 서버가 같은 job을 잡는 것을 방지하고 실행 위치를 기록.
     claimed_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    viewers: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
     result_path: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()

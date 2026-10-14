@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -19,6 +20,8 @@ class ModuleRead(BaseModel):
     module_name: str
     module_type: ModuleType
     module_subtype: list[str]
+    owner_id: uuid.UUID | None = None
+    equipment_id: uuid.UUID | None = None
     save_status: SaveStatus
     created_at: datetime
     updated_at: datetime

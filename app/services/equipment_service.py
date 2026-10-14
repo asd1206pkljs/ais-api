@@ -2,15 +2,32 @@ import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.exceptions import AuthorizationError, NotFoundError
+from app.enums import ResourceType, SharePermission
+from app.enums import audit_action as act
+from app.exceptions import AuthorizationError, NotFoundError, ValidationError
+from app.models.equipment import Equipment
 from app.repositories.equipment_repository import EquipmentRepository
 from app.repositories.flow_recipe_repository import FlowRecipeRepository
 from app.repositories.module_repository import ModuleRepository
 from app.repositories.process_recipe_repository import ProcessRecipeRepository
 from app.schemas.equipment import EquipmentCreate, EquipmentRead, EquipmentUpdate
 from app.schemas.equipment_config import EquipmentConfig
-from app.services.access import is_admin
+from app.services.access import AccessPolicy, access_policy
+from app.services.audit_service import AuditService, audit
 from app.services.file_storage_service import FileStorageService, file_storage
+from app.services.sharing_service import SharingService
+
+RTYPE = ResourceType.EQUIPMENT.value
+
+
+def _uuids(values: list) -> list[uuid.UUID]:
+    out = []
+    for v in values:
+        try:
+            out.append(uuid.UUID(str(v)))
+        except (ValueError, TypeError):
+            continue
+    return out
 
 
 class EquipmentService:
@@ -21,44 +38,113 @@ class EquipmentService:
         module_repo: ModuleRepository | None = None,
         process_recipe_repo: ProcessRecipeRepository | None = None,
         flow_recipe_repo: FlowRecipeRepository | None = None,
+        access: AccessPolicy = access_policy,
+        sharing: SharingService | None = None,
+        audit_svc: AuditService = audit,
     ):
         self._repo = repo
         self._storage = storage
         self._module_repo = module_repo or ModuleRepository()
         self._process_repo = process_recipe_repo or ProcessRecipeRepository()
         self._flow_repo = flow_recipe_repo or FlowRecipeRepository()
+        self._access = access
+        self._sharing = sharing or SharingService(access=access, audit_svc=audit_svc)
+        self._audit = audit_svc
 
-    def _can_view(self, equipment, user_id: uuid.UUID) -> bool:
-        uid = str(user_id)
-        viewers = equipment.viewers or []
-        editors = equipment.editors or []
-        return (
-            equipment.owner_id == user_id
-            or "*" in viewers
-            or "*" in editors
-            or uid in viewers
-            or uid in editors
+    # --- helpers ---------------------------------------------------------------
+
+    async def _load(self, session: AsyncSession, equipment_id: uuid.UUID) -> Equipment:
+        equipment = await self._repo.find_by_id(session, equipment_id)
+        if equipment is None or equipment.save_status == "deleted":
+            raise NotFoundError("Equipment", str(equipment_id))
+        return equipment
+
+    async def _can_view(self, session, equipment, user_id) -> bool:
+        return await self._access.can_view(session, RTYPE, equipment.equipment_id, equipment.owner_id, user_id)
+
+    async def _can_edit(self, session, equipment, user_id) -> bool:
+        return await self._access.can_edit(session, RTYPE, equipment.equipment_id, equipment.owner_id, user_id)
+
+    async def _reads(
+        self, session: AsyncSession, rows: list[Equipment], viewer_id: uuid.UUID | None = None
+    ) -> list[EquipmentRead]:
+        lists = await self._sharing.access_lists(
+            session, RTYPE, [str(e.equipment_id) for e in rows],
+            viewer_id=viewer_id, owners={str(e.equipment_id): e.owner_id for e in rows},
         )
+        out = []
+        for e in rows:
+            viewers, editors = lists.get(str(e.equipment_id), ([], []))
+            read = EquipmentRead.model_validate(e)
+            out.append(read.model_copy(update={"viewers": viewers, "editors": editors}))
+        return out
 
-    def _can_edit(self, equipment, user_id: uuid.UUID) -> bool:
-        editors = equipment.editors or []
-        return equipment.owner_id == user_id or "*" in editors or str(user_id) in editors
+    async def _read(
+        self, session: AsyncSession, row: Equipment, viewer_id: uuid.UUID | None = None
+    ) -> EquipmentRead:
+        (read,) = await self._reads(session, [row], viewer_id)
+        return read
 
-    def _is_owner(self, equipment, user_id: uuid.UUID) -> bool:
-        return equipment.owner_id == user_id
+    async def _authorize_children(
+        self, session: AsyncSession, equipment: Equipment, cfg: dict, user_id: uuid.UUID
+    ) -> None:
+        """Every recipe/module a config references must be one the caller may
+        edit. Otherwise an editor could link a stranger's rows into their
+        equipment and inherit access to them. Unowned legacy rows and rows
+        already attached to this equipment are accepted."""
+        checks = (
+            (ResourceType.FLOW_RECIPE.value, "flow_recipe_id",
+             await self._flow_repo.find_by_ids(session, _uuids(cfg.get("flow_recipe_ids", [])))),
+            (ResourceType.PROCESS_RECIPE.value, "process_recipe_id",
+             await self._process_repo.find_by_ids(session, _uuids(cfg.get("process_recipe_ids", [])))),
+            (ResourceType.MODULE.value, "module_id",
+             await self._module_repo.find_by_ids(
+                 session, [m["module_id"] for m in cfg.get("modules", []) if isinstance(m.get("module_id"), int)])),
+        )
+        for rtype, id_attr, rows in checks:
+            for row in rows:
+                if row.owner_id in (None, user_id, equipment.owner_id) or row.equipment_id == equipment.equipment_id:
+                    continue
+                if not await self._access.can_edit_linked(
+                    session, rtype, getattr(row, id_attr), row.owner_id, row.equipment_id, user_id
+                ):
+                    # Same wording as a missing row: do not confirm that it exists.
+                    raise ValidationError(f"{rtype} '{getattr(row, id_attr)}' not found")
+
+    async def _link_children(
+        self, session: AsyncSession, equipment: Equipment, config: dict | EquipmentConfig
+    ) -> None:
+        """Attach the modules/recipes a config references to the equipment so
+        their access follows the equipment's; unowned legacy rows get its owner.
+        Callers run _authorize_children first."""
+        cfg = config.model_dump() if isinstance(config, EquipmentConfig) else config
+        module_ids = [m["module_id"] for m in cfg.get("modules", [])]
+        await self._flow_repo.sync_equipment_link(
+            session, equipment.equipment_id, _uuids(cfg.get("flow_recipe_ids", [])), equipment.owner_id)
+        await self._process_repo.sync_equipment_link(
+            session, equipment.equipment_id, _uuids(cfg.get("process_recipe_ids", [])), equipment.owner_id)
+        await self._module_repo.sync_equipment_link(
+            session, equipment.equipment_id, module_ids, equipment.owner_id)  # commits
+
+    async def _viewable(self, session: AsyncSession, rtype: str, id_attr: str, row, user_id: uuid.UUID) -> bool:
+        return await self._access.can_view_linked(
+            session, rtype, getattr(row, id_attr), row.owner_id, row.equipment_id, user_id)
+
+    # --- CRUD ------------------------------------------------------------------
 
     async def list_by_owner(
         self, session: AsyncSession, owner_id: uuid.UUID, skip: int = 0, limit: int = 100
     ) -> list[EquipmentRead]:
-        if await is_admin(session, owner_id):
+        """Admins see every equipment's metadata (console); users see what they
+        own or were granted, directly or through a group."""
+        if await self._access.is_admin(session, owner_id):
             equipments = await self._repo.find_all(session, skip, limit)
         else:
-            equipments = await self._repo.find_accessible_by_user(session, owner_id, skip, limit)
-        return [EquipmentRead.model_validate(e) for e in equipments]
+            principals = await self._access.principals(session, owner_id)
+            equipments = await self._repo.find_accessible_by_user(session, owner_id, principals, skip, limit)
+        return await self._reads(session, equipments, owner_id)
 
-    async def create(
-        self, session: AsyncSession, owner_id: uuid.UUID, data: EquipmentCreate
-    ) -> EquipmentRead:
+    async def create(self, session: AsyncSession, owner_id: uuid.UUID, data: EquipmentCreate) -> EquipmentRead:
         equipment_id = uuid.uuid4()
         rel_path = self._storage.equipment_path(equipment_id)
         abs_path = self._storage.write_json(rel_path, {
@@ -67,53 +153,42 @@ class EquipmentService:
             "modules": [],
             "timetables": {},
         })
-        owner_str = str(owner_id)
         equipment = await self._repo.create(session, {
             "equipment_id": equipment_id,
             "equipment_name": data.equipment_name,
             "equipment_configuration_file_path": abs_path,
             "owner_id": owner_id,
-            "viewers": [owner_str],
-            "editors": [owner_str],
             "save_status": "saved_temporarily",
         })
-        return EquipmentRead.model_validate(equipment)
+        await self._audit.record(session, act.RESOURCE_CREATED, resource_type=RTYPE, resource_id=equipment_id,
+                                 details={"name": data.equipment_name})
+        return await self._read(session, equipment, owner_id)
 
-    async def get(
-        self, session: AsyncSession, equipment_id: uuid.UUID, user_id: uuid.UUID
-    ) -> EquipmentRead:
-        equipment = await self._repo.find_by_id(session, equipment_id)
-        if equipment is None:
-            raise NotFoundError("Equipment", str(equipment_id))
-        if not self._can_view(equipment, user_id) and not await is_admin(session, user_id):
+    async def get(self, session: AsyncSession, equipment_id: uuid.UUID, user_id: uuid.UUID) -> EquipmentRead:
+        """Metadata only; admins may read it for the console."""
+        equipment = await self._load(session, equipment_id)
+        if not await self._can_view(session, equipment, user_id) and not await self._access.is_admin(session, user_id):
             raise AuthorizationError()
-        return EquipmentRead.model_validate(equipment)
+        return await self._read(session, equipment, user_id)
 
     async def copy(
-        self,
-        session: AsyncSession,
-        equipment_id: uuid.UUID,
-        user_id: uuid.UUID,
-        new_name: str,
+        self, session: AsyncSession, equipment_id: uuid.UUID, user_id: uuid.UUID, new_name: str
     ) -> EquipmentRead:
         """Deep-copy an equipment: new modules + new process/flow recipes, fully
-        independent from the source (no shared rows), owned by ``user_id``."""
-        source = await self._repo.find_by_id(session, equipment_id)
-        if source is None:
-            raise NotFoundError("Equipment", str(equipment_id))
-        if not self._can_view(source, user_id) and not await is_admin(session, user_id):
+        independent from the source, owned by ``user_id``. Requires view access
+        (copying reads the content, so there is no admin bypass)."""
+        source = await self._load(session, equipment_id)
+        if not await self._can_view(session, source, user_id):
             raise AuthorizationError()
 
         src = self._storage.read_json(source.equipment_configuration_file_path)
 
-        # 1) Duplicate modules (new rows). Sharing rows is unsafe: modules have a
-        #    single equipment FK, so linking them to the copy would steal them
-        #    from the source. old module_id (int) -> new module_id (int).
+        # 1) Duplicate modules (new rows, owned by the copier). old id -> new id.
         mod_map: dict[int, int] = {}
         for m in src.get("modules", []):
             old_mid = m["module_id"]
             row = await self._module_repo.find_by_id(session, old_mid)
-            if row is None:
+            if row is None or not await self._viewable(session, ResourceType.MODULE.value, "module_id", row, user_id):
                 continue
             new_row = await self._module_repo.create(session, {
                 "module_name": row.module_name,
@@ -121,6 +196,7 @@ class EquipmentService:
                 "module_subtype": list(row.module_subtype or []),
                 "save_status": row.save_status,
                 "equipment_id": None,
+                "owner_id": user_id,
             })
             mod_map[old_mid] = new_row.module_id
 
@@ -138,21 +214,22 @@ class EquipmentService:
             except (ValueError, TypeError):
                 continue
             pr_row = await self._process_repo.find_by_id(session, old_pr_uuid)
-            if pr_row is None:
+            if pr_row is None or not await self._viewable(
+                session, ResourceType.PROCESS_RECIPE.value, "process_recipe_id", pr_row, user_id
+            ):
                 continue
             pr_cfg = self._storage.read_json(pr_row.process_recipe_path)
             pr_cfg["user_added_process_modules"] = [
-                mod_map.get(mid, mid)
-                for mid in pr_cfg.get("user_added_process_modules", [])
+                mod_map.get(mid, mid) for mid in pr_cfg.get("user_added_process_modules", [])
             ]
             new_pr_id = uuid.uuid4()
-            new_pr_path = self._storage.write_json(
-                self._storage.process_recipe_path(new_pr_id), pr_cfg)
+            new_pr_path = self._storage.write_json(self._storage.process_recipe_path(new_pr_id), pr_cfg)
             await self._process_repo.create(session, {
                 "process_recipe_id": new_pr_id,
                 "process_recipe_name": pr_row.process_recipe_name,
                 "process_recipe_path": new_pr_path,
                 "save_status": pr_row.save_status,
+                "owner_id": user_id,
             })
             pr_map[old_pr] = str(new_pr_id)
 
@@ -164,24 +241,25 @@ class EquipmentService:
             except (ValueError, TypeError):
                 continue
             fr_row = await self._flow_repo.find_by_id(session, old_fr_uuid)
-            if fr_row is None:
+            if fr_row is None or not await self._viewable(
+                session, ResourceType.FLOW_RECIPE.value, "flow_recipe_id", fr_row, user_id
+            ):
                 continue
             fr_cfg = self._storage.read_json(fr_row.flow_recipe_path)
             for step in fr_cfg.get("process_recipe_steps", []):
                 if step.get("process_recipe_id") in pr_map:
                     step["process_recipe_id"] = pr_map[step["process_recipe_id"]]
             fr_cfg["module_sequence"] = [
-                [remap_mod(x) for x in step]
-                for step in fr_cfg.get("module_sequence", [])
+                [remap_mod(x) for x in step] for step in fr_cfg.get("module_sequence", [])
             ]
             new_fr_id = uuid.uuid4()
-            new_fr_path = self._storage.write_json(
-                self._storage.flow_recipe_path(new_fr_id), fr_cfg)
+            new_fr_path = self._storage.write_json(self._storage.flow_recipe_path(new_fr_id), fr_cfg)
             await self._flow_repo.create(session, {
                 "flow_recipe_id": new_fr_id,
                 "flow_recipe_name": fr_row.flow_recipe_name,
                 "flow_recipe_path": new_fr_path,
                 "save_status": fr_row.save_status,
+                "owner_id": user_id,
             })
             fr_new_ids.append(str(new_fr_id))
 
@@ -189,131 +267,82 @@ class EquipmentService:
         new_cfg = dict(src)
         new_cfg["equipment_name"] = new_name
         new_cfg["modules"] = [
-            {**m, "module_id": mod_map.get(m["module_id"], m["module_id"])}
-            for m in src.get("modules", [])
+            {**m, "module_id": mod_map.get(m["module_id"], m["module_id"])} for m in src.get("modules", [])
         ]
         new_cfg["process_recipe_ids"] = list(pr_map.values())
         new_cfg["flow_recipe_ids"] = fr_new_ids
 
         new_eq_id = uuid.uuid4()
-        new_path = self._storage.write_json(
-            self._storage.equipment_path(new_eq_id), new_cfg)
-        owner_str = str(user_id)
+        new_path = self._storage.write_json(self._storage.equipment_path(new_eq_id), new_cfg)
         equipment = await self._repo.create(session, {
             "equipment_id": new_eq_id,
             "equipment_name": new_name,
             "equipment_configuration_file_path": new_path,
             "owner_id": user_id,
-            "viewers": [owner_str],
-            "editors": [owner_str],
             "save_status": source.save_status,
         })
-        await self._module_repo.sync_equipment_link(
-            session, new_eq_id, list(mod_map.values()))
-        return EquipmentRead.model_validate(equipment)
+        await self._link_children(session, equipment, new_cfg)
+        await self._audit.record(session, act.RESOURCE_COPIED, resource_type=RTYPE, resource_id=new_eq_id,
+                                 details={"source": str(equipment_id)})
+        return await self._read(session, equipment, user_id)
 
-    async def get_config(
-        self, session: AsyncSession, equipment_id: uuid.UUID, user_id: uuid.UUID
-    ) -> EquipmentConfig:
-        equipment = await self._repo.find_by_id(session, equipment_id)
-        if equipment is None:
-            raise NotFoundError("Equipment", str(equipment_id))
-        if not self._can_view(equipment, user_id) and not await is_admin(session, user_id):
+    async def get_config(self, session: AsyncSession, equipment_id: uuid.UUID, user_id: uuid.UUID) -> EquipmentConfig:
+        equipment = await self._load(session, equipment_id)
+        if not await self._can_view(session, equipment, user_id):
             raise AuthorizationError()
         data = self._storage.read_json(equipment.equipment_configuration_file_path)
+        await self._audit.record(session, act.RESOURCE_READ, resource_type=RTYPE, resource_id=equipment_id,
+                                 details={"part": "config"})
         return EquipmentConfig.model_validate(data)
 
     async def update_config(
-        self,
-        session: AsyncSession,
-        equipment_id: uuid.UUID,
-        user_id: uuid.UUID,
-        config: EquipmentConfig,
+        self, session: AsyncSession, equipment_id: uuid.UUID, user_id: uuid.UUID, config: EquipmentConfig
     ) -> EquipmentConfig:
-        equipment = await self._repo.find_by_id(session, equipment_id)
-        if equipment is None:
-            raise NotFoundError("Equipment", str(equipment_id))
-        if not self._can_edit(equipment, user_id):
+        equipment = await self._load(session, equipment_id)
+        if not await self._can_edit(session, equipment, user_id):
             raise AuthorizationError()
-        self._storage.write_json(
-            equipment.equipment_configuration_file_path, config.model_dump()
-        )
-        module_ids = [m.module_id for m in config.modules]
-        await self._module_repo.sync_equipment_link(session, equipment_id, module_ids)
+        await self._authorize_children(session, equipment, config.model_dump(), user_id)
+        self._storage.write_json(equipment.equipment_configuration_file_path, config.model_dump())
+        await self._link_children(session, equipment, config)
+        await self._audit.record(session, act.RESOURCE_UPDATED, resource_type=RTYPE, resource_id=equipment_id,
+                                 details={"part": "config"})
         return config
 
     async def update(
-        self,
-        session: AsyncSession,
-        equipment_id: uuid.UUID,
-        user_id: uuid.UUID,
-        data: EquipmentUpdate,
+        self, session: AsyncSession, equipment_id: uuid.UUID, user_id: uuid.UUID, data: EquipmentUpdate
     ) -> EquipmentRead:
-        equipment = await self._repo.find_by_id(session, equipment_id)
-        if equipment is None:
-            raise NotFoundError("Equipment", str(equipment_id))
-        if not self._can_edit(equipment, user_id):
+        equipment = await self._load(session, equipment_id)
+        if not await self._can_edit(session, equipment, user_id):
             raise AuthorizationError()
-        updated = await self._repo.update(
-            session, equipment_id, data.model_dump(exclude_none=True)
-        )
-        return EquipmentRead.model_validate(updated)
+        changes = data.model_dump(exclude_none=True)
+        updated = await self._repo.update(session, equipment_id, changes)
+        await self._audit.record(session, act.RESOURCE_UPDATED, resource_type=RTYPE, resource_id=equipment_id,
+                                 details=changes)
+        return await self._read(session, updated, user_id)
 
-    async def delete(
-        self, session: AsyncSession, equipment_id: uuid.UUID, user_id: uuid.UUID
-    ) -> None:
-        equipment = await self._repo.find_by_id(session, equipment_id)
-        if equipment is None:
-            raise NotFoundError("Equipment", str(equipment_id))
-        if not self._is_owner(equipment, user_id):
+    async def delete(self, session: AsyncSession, equipment_id: uuid.UUID, user_id: uuid.UUID) -> None:
+        equipment = await self._load(session, equipment_id)
+        if not self._access.is_owner(equipment.owner_id, user_id):
             raise AuthorizationError("Only the owner can delete equipment")
         self._storage.delete(equipment.equipment_configuration_file_path)
+        await self._sharing.delete_for_resource(session, RTYPE, equipment_id)
         await self._repo.delete(session, equipment_id)
+        await self._audit.record(session, act.RESOURCE_DELETED, resource_type=RTYPE, resource_id=equipment_id)
 
-    async def add_viewer(
-        self, session: AsyncSession, equipment_id: uuid.UUID, owner_id: uuid.UUID, viewer_id: str
-    ) -> EquipmentRead:
-        equipment = await self._repo.find_by_id(session, equipment_id)
-        if equipment is None:
-            raise NotFoundError("Equipment", str(equipment_id))
-        if not self._is_owner(equipment, owner_id):
-            raise AuthorizationError("Only the owner can manage viewers")
-        new_viewers = [*(equipment.viewers or []), viewer_id] if viewer_id not in (equipment.viewers or []) else list(equipment.viewers)
-        updated = await self._repo.update(session, equipment_id, {"viewers": new_viewers})
-        return EquipmentRead.model_validate(updated)
+    # --- legacy sharing endpoints (POST/DELETE .../viewers|editors) ------------------
 
-    async def remove_viewer(
-        self, session: AsyncSession, equipment_id: uuid.UUID, owner_id: uuid.UUID, viewer_id: str
-    ) -> EquipmentRead:
-        equipment = await self._repo.find_by_id(session, equipment_id)
-        if equipment is None:
-            raise NotFoundError("Equipment", str(equipment_id))
-        if not self._is_owner(equipment, owner_id):
-            raise AuthorizationError("Only the owner can manage viewers")
-        new_viewers = [v for v in (equipment.viewers or []) if v != viewer_id]
-        updated = await self._repo.update(session, equipment_id, {"viewers": new_viewers})
-        return EquipmentRead.model_validate(updated)
+    async def add_viewer(self, session, equipment_id, owner_id, viewer_id: str) -> EquipmentRead:
+        await self._sharing.grant_legacy(session, RTYPE, str(equipment_id), owner_id, viewer_id, SharePermission.VIEW)
+        return await self._read(session, await self._load(session, equipment_id), owner_id)
 
-    async def add_editor(
-        self, session: AsyncSession, equipment_id: uuid.UUID, owner_id: uuid.UUID, editor_id: str
-    ) -> EquipmentRead:
-        equipment = await self._repo.find_by_id(session, equipment_id)
-        if equipment is None:
-            raise NotFoundError("Equipment", str(equipment_id))
-        if not self._is_owner(equipment, owner_id):
-            raise AuthorizationError("Only the owner can manage editors")
-        new_editors = [*(equipment.editors or []), editor_id] if editor_id not in (equipment.editors or []) else list(equipment.editors)
-        updated = await self._repo.update(session, equipment_id, {"editors": new_editors})
-        return EquipmentRead.model_validate(updated)
+    async def remove_viewer(self, session, equipment_id, owner_id, viewer_id: str) -> EquipmentRead:
+        await self._sharing.revoke_legacy(session, RTYPE, str(equipment_id), owner_id, viewer_id, SharePermission.VIEW)
+        return await self._read(session, await self._load(session, equipment_id), owner_id)
 
-    async def remove_editor(
-        self, session: AsyncSession, equipment_id: uuid.UUID, owner_id: uuid.UUID, editor_id: str
-    ) -> EquipmentRead:
-        equipment = await self._repo.find_by_id(session, equipment_id)
-        if equipment is None:
-            raise NotFoundError("Equipment", str(equipment_id))
-        if not self._is_owner(equipment, owner_id):
-            raise AuthorizationError("Only the owner can manage editors")
-        new_editors = [e for e in (equipment.editors or []) if e != editor_id]
-        updated = await self._repo.update(session, equipment_id, {"editors": new_editors})
-        return EquipmentRead.model_validate(updated)
+    async def add_editor(self, session, equipment_id, owner_id, editor_id: str) -> EquipmentRead:
+        await self._sharing.grant_legacy(session, RTYPE, str(equipment_id), owner_id, editor_id, SharePermission.EDIT)
+        return await self._read(session, await self._load(session, equipment_id), owner_id)
+
+    async def remove_editor(self, session, equipment_id, owner_id, editor_id: str) -> EquipmentRead:
+        await self._sharing.revoke_legacy(session, RTYPE, str(equipment_id), owner_id, editor_id, SharePermission.EDIT)
+        return await self._read(session, await self._load(session, equipment_id), owner_id)

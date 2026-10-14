@@ -12,9 +12,12 @@ from app.exceptions import (
     NotFoundError,
 )
 from app.models.user import User
+from app.schemas.consent import ConsentInput
 from app.schemas.user import UserCreate, UserUpdate
 from app.services.auth_service import hash_password
 from app.services.user_service import UserService
+
+CONSENTS = ConsentInput(terms_version="2026-10-01", privacy_version="2026-10-01")
 
 
 def _make_user(**kwargs) -> User:
@@ -27,6 +30,8 @@ def _make_user(**kwargs) -> User:
         "user_credits": 0,
         "approved": True,
         "token_version": 0,
+        "role": "user",
+        "status": "active",
         "joined_at": datetime.now(timezone.utc),
         "last_login_at": None,
     }
@@ -64,7 +69,7 @@ async def test_register_success_creates_unverified_account(service, repo, sessio
     result = await service.register(session, UserCreate(
         user_name="Test", user_email="test@example.com", user_password="Password123!",
         user_company="ACME",
-    ))
+    ), consents=CONSENTS)
     assert result.user_email == "test@example.com"
     assert result.approved is False
     created = repo.create.call_args[0][1]
@@ -78,7 +83,7 @@ async def test_register_blocked_by_approved_duplicate(service, repo, session):
     with pytest.raises(ConflictError):
         await service.register(session, UserCreate(
             user_name="Test", user_email="test@example.com", user_password="Password123!"
-        ))
+        ), consents=CONSENTS)
     repo.create.assert_not_called()
 
 
@@ -90,7 +95,7 @@ async def test_register_allowed_when_only_pending_duplicates_exist(service, repo
     repo.create.return_value = _make_user(approved=False)
     result = await service.register(session, UserCreate(
         user_name="Test", user_email="test@example.com", user_password="Password123!"
-    ))
+    ), consents=CONSENTS)
     assert result.approved is False
     repo.create.assert_called_once()
 

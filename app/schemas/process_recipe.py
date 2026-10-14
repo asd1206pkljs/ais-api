@@ -16,7 +16,8 @@ class ProcessRecipeRead(BaseModel):
 
     process_recipe_id: uuid.UUID
     process_recipe_name: str
-    process_recipe_path: str
+    owner_id: uuid.UUID | None = None
+    equipment_id: uuid.UUID | None = None
     save_status: SaveStatus
     created_at: datetime
     updated_at: datetime

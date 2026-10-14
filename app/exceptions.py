@@ -35,6 +35,16 @@ class EmailNotVerifiedError(Exception):
         super().__init__(message)
 
 
+class AccountPendingApprovalError(Exception):
+    def __init__(self, message: str = "Account awaiting approval"):
+        super().__init__(message)
+
+
+class AccountDisabledError(Exception):
+    def __init__(self, message: str = "Account disabled"):
+        super().__init__(message)
+
+
 class AccountLockedError(Exception):
     def __init__(self, retry_after_seconds: int):
         self.retry_after_seconds = max(1, int(retry_after_seconds))

@@ -5,6 +5,8 @@ from unittest.mock import patch
 from urllib.parse import parse_qs, urlparse
 
 import pytest
+
+from tests.conftest import CONSENTS
 from jose import jwt
 
 from app.config import settings
@@ -138,7 +140,7 @@ async def test_forgot_password_is_generic_for_unknown_and_pending_emails(client)
     pending = f"pending_{uuid.uuid4().hex[:8]}@example.com"
     with patch(SEND_VERIFY):
         res = await client.post("/auth/register", json={
-            "user_name": "P", "email": pending, "password": "Password123!",
+            "user_name": "P", "email": pending, "password": "Password123!", "consents": CONSENTS,
         })
     assert res.status_code == 200, res.text
     with patch(SEND_RESET) as send:

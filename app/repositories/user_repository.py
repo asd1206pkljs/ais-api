@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import User
@@ -26,6 +26,62 @@ class UserRepository(BaseRepository[User]):
             select(User).where(User.user_email == email, User.approved.is_(True))
         )
         return result.scalar_one_or_none()
+
+    async def find_many_by_ids(self, session: AsyncSession, ids: list[uuid.UUID]) -> dict[uuid.UUID, User]:
+        if not ids:
+            return {}
+        result = await session.execute(select(User).where(User.user_id.in_(ids)))
+        return {u.user_id: u for u in result.scalars().all()}
+
+    async def find_by_role(self, session: AsyncSession, role: str) -> list[User]:
+        result = await session.execute(
+            select(User).where(User.role == role, User.approved.is_(True))
+        )
+        return list(result.scalars().all())
+
+    @staticmethod
+    def _search_filters(status: str | None, role: str | None, q: str | None) -> list:
+        conditions = [User.approved.is_(True)]
+        if status:
+            conditions.append(User.status == status)
+        if role:
+            conditions.append(User.role == role)
+        if q:
+            pattern = f"%{q.strip().lower()}%"
+            conditions.append(or_(
+                func.lower(User.user_email).like(pattern),
+                func.lower(User.user_name).like(pattern),
+                func.lower(func.coalesce(User.user_company, "")).like(pattern),
+            ))
+        return conditions
+
+    async def search(
+        self,
+        session: AsyncSession,
+        *,
+        status: str | None = None,
+        role: str | None = None,
+        q: str | None = None,
+        skip: int = 0,
+        limit: int = 100,
+    ) -> list[User]:
+        """Verified accounts filtered for the admin console, newest first."""
+        result = await session.execute(
+            select(User)
+            .where(*self._search_filters(status, role, q))
+            .order_by(User.joined_at.desc())
+            .offset(skip)
+            .limit(limit)
+        )
+        return list(result.scalars().all())
+
+    async def count_search(
+        self, session: AsyncSession, *, status: str | None = None, role: str | None = None, q: str | None = None
+    ) -> int:
+        result = await session.execute(
+            select(func.count()).select_from(User).where(*self._search_filters(status, role, q))
+        )
+        return result.scalar_one()
 
     async def find_pending_by_email(self, session: AsyncSession, email: str) -> list[User]:
         """Return unverified sign-ups for this email, newest first."""

@@ -1,4 +1,5 @@
 import uuid
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -138,7 +139,8 @@ async def generate_equipment_model(
     current_user: UserRead = Depends(get_current_user),
 ):
     output_dir = await generate_eqp_model(db, equipment_id, current_user.user_id)
-    return APIResponse.ok({"output_dir": output_dir})
+    # Only the model name leaves the server; absolute paths are internal.
+    return APIResponse.ok({"eqp_model": Path(output_dir).name})
 
 
 @router.post("/{equipment_id}/viewers", response_model=APIResponse[EquipmentRead])

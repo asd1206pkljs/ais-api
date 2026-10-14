@@ -13,8 +13,45 @@ class Settings(BaseSettings):
     CORS_ALLOWED_ORIGINS: str = "http://localhost:3000"
     DISABLE_RATE_LIMIT: bool = False
     INTERNAL_API_KEY: str = ""
-    # Comma-separated emails granted admin access (view all equipment/simulators).
+    # Bootstrap admins: comma-separated emails treated as platform admins even
+    # before their users.role is set (the migration promotes them). Prefer
+    # managing roles through PATCH /admin/users/{id} afterwards.
     ADMIN_EMAILS: str = ""
+    # Where admin notifications (new sign-ups, credit requests) go; falls back
+    # to CONTACT_INBOX_EMAIL, then EMAIL_FROM.
+    ADMIN_NOTIFY_EMAIL: str = ""
+
+    # --- sign-up approval policy ---
+    # When true a verified sign-up waits for an administrator unless its email
+    # domain is listed in SIGNUP_AUTO_APPROVE_DOMAINS (comma-separated).
+    SIGNUP_REQUIRE_APPROVAL: bool = True
+    SIGNUP_AUTO_APPROVE_DOMAINS: str = ""
+
+    # --- credit request policy ---
+    # Requests for at most this many credits are granted without an admin,
+    # provided the user had no auto-approved request within the window.
+    # 0 disables automatic approval.
+    CREDIT_REQUEST_AUTO_APPROVE_MAX: int = 0
+    CREDIT_REQUEST_AUTO_APPROVE_WINDOW_DAYS: int = 30
+    # The purchase endpoint has no payment provider behind it: it credits the
+    # account immediately. Off by default; set true only for the mock checkout demo.
+    CREDIT_PURCHASE_ENABLED: bool = False
+
+    # --- legal consent ---
+    TERMS_VERSION: str = "2026-10-01"
+    PRIVACY_VERSION: str = "2026-10-01"
+    # Registration must carry acceptance of the current versions above.
+    CONSENT_REQUIRED: bool = True
+
+    # --- data at rest ---
+    # base64 of 32 random bytes (python -c "import os,base64;print(base64.b64encode(os.urandom(32)).decode())").
+    # Every stored config file is encrypted (AES-256-GCM, envelope) under it.
+    DATA_ENCRYPTION_KEY: str = ""
+    # Comma-separated previous keys still accepted for decryption after a rotation.
+    DATA_ENCRYPTION_KEYS_PREVIOUS: str = ""
+    ENCRYPT_DATA_AT_REST: bool = True
+    # Allow reading legacy plaintext config files (until app.tasks.encrypt_files ran).
+    ALLOW_PLAINTEXT_FILES: bool = True
 
     PASSWORD_RESET_TTL_MINUTES: int = 30
     PASSWORD_RESET_URL_BASE: str = "http://localhost:3000"
@@ -61,6 +98,22 @@ class Settings(BaseSettings):
     @property
     def email_verify_url_base(self) -> str:
         return self.EMAIL_VERIFY_URL_BASE or self.PASSWORD_RESET_URL_BASE
+
+    @property
+    def signup_auto_approve_domains(self) -> set[str]:
+        return {
+            d.strip().lower().lstrip("@")
+            for d in self.SIGNUP_AUTO_APPROVE_DOMAINS.split(",")
+            if d.strip()
+        }
+
+    @property
+    def admin_notify_email(self) -> str:
+        return self.ADMIN_NOTIFY_EMAIL or self.CONTACT_INBOX_EMAIL or self.EMAIL_FROM
+
+    @property
+    def data_encryption_keys_previous(self) -> list[str]:
+        return [k.strip() for k in self.DATA_ENCRYPTION_KEYS_PREVIOUS.split(",") if k.strip()]
 
 
 settings = Settings()

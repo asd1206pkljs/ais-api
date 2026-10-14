@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field, field_validator
 
+from app.schemas.consent import ConsentInput
 from app.validators.email import NormalizedEmail
 from app.validators.password import validate_strong_password
 
@@ -14,6 +15,8 @@ class RegisterRequest(BaseModel):
     email: NormalizedEmail
     password: str = Field(..., min_length=8)
     company: str | None = Field(None, max_length=255)
+    # Accepted legal document versions; required when CONSENT_REQUIRED is on.
+    consents: ConsentInput | None = None
 
     @field_validator("password")
     @classmethod

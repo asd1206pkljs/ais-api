@@ -16,10 +16,11 @@ class EquipmentRead(BaseModel):
 
     equipment_id: uuid.UUID
     equipment_name: str
-    equipment_configuration_file_path: str
     owner_id: uuid.UUID
-    viewers: list[str]
-    editors: list[str]
+    # Principal ids (users, groups, or "*") with view / edit access. Derived
+    # from resource_shares; kept so existing clients can compute canEdit.
+    viewers: list[str] = []
+    editors: list[str] = []
     save_status: str
     created_at: datetime
     updated_at: datetime

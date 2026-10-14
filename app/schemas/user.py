@@ -28,6 +28,8 @@ class UserRead(BaseModel):
     user_company: str | None
     user_credits: int
     approved: bool
+    role: str = "user"
+    status: str = "active"
     joined_at: datetime
     last_login_at: datetime | None
 
