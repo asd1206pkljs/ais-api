@@ -4,19 +4,24 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.exceptions import (
+    AccountLockedError,
     AuthenticationError,
     AuthorizationError,
     ConflictError,
+    EmailNotVerifiedError,
     InsufficientCreditsError,
     NotFoundError,
     ValidationError,
 )
 
 
-def _make_response(request: Request, status: int, error: str) -> JSONResponse:
+def _make_response(
+    request: Request, status: int, error: str, headers: dict[str, str] | None = None
+) -> JSONResponse:
     response = JSONResponse(
         status_code=status,
         content={"success": False, "data": None, "error": error, "metadata": None},
+        headers=headers,
     )
     origin = request.headers.get("origin", "")
     if origin in settings.cors_origins:
@@ -36,6 +41,16 @@ def setup_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(AuthorizationError)
     async def authz_error_handler(request: Request, exc: AuthorizationError):
+        return _make_response(request, 403, str(exc))
+
+    @app.exception_handler(AccountLockedError)
+    async def account_locked_handler(request: Request, exc: AccountLockedError):
+        return _make_response(
+            request, 429, str(exc), headers={"Retry-After": str(exc.retry_after_seconds)}
+        )
+
+    @app.exception_handler(EmailNotVerifiedError)
+    async def email_not_verified_handler(request: Request, exc: EmailNotVerifiedError):
         return _make_response(request, 403, str(exc))
 
     @app.exception_handler(ConflictError)

@@ -1,7 +1,180 @@
 {
   "equipment_name": "tt",
   "cluster_type": "dual_cluster",
-  "modules": [],
+  "modules": [
+    {
+      "module_id": 130,
+      "module_type": "loadport",
+      "display_name": "LoadPort #1",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 131,
+      "module_type": "loadport",
+      "display_name": "LoadPort #2",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 132,
+      "module_type": "loadport",
+      "display_name": "LoadPort #3",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 133,
+      "module_type": "process_module",
+      "display_name": "Process Module #1",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 134,
+      "module_type": "process_module",
+      "display_name": "Process Module #2",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 135,
+      "module_type": "process_module",
+      "display_name": "Process Module #3",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 136,
+      "module_type": "process_module",
+      "display_name": "Process Module #4",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 137,
+      "module_type": "process_module",
+      "display_name": "Process Module #5",
+      "cluster": [
+        "vacuum_cluster_2"
+      ]
+    },
+    {
+      "module_id": 138,
+      "module_type": "process_module",
+      "display_name": "Process Module #6",
+      "cluster": [
+        "vacuum_cluster_2"
+      ]
+    },
+    {
+      "module_id": 139,
+      "module_type": "process_module",
+      "display_name": "Process Module #7",
+      "cluster": [
+        "vacuum_cluster_2"
+      ]
+    },
+    {
+      "module_id": 140,
+      "module_type": "process_module",
+      "display_name": "Process Module #8",
+      "cluster": [
+        "vacuum_cluster_2"
+      ]
+    },
+    {
+      "module_id": 141,
+      "module_type": "loadlock",
+      "display_name": "LoadLock #1",
+      "cluster": [
+        "efem",
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 142,
+      "module_type": "loadlock",
+      "display_name": "LoadLock #2",
+      "cluster": [
+        "efem",
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 143,
+      "module_type": "aligner",
+      "display_name": "Aligner #1",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 144,
+      "module_type": "robot",
+      "display_name": "Robot #1",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 145,
+      "module_type": "robot",
+      "display_name": "Robot #2",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 146,
+      "module_type": "robot",
+      "display_name": "Robot #3",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 147,
+      "module_type": "robot",
+      "display_name": "Robot #4",
+      "cluster": [
+        "vacuum_cluster_2"
+      ]
+    },
+    {
+      "module_id": 148,
+      "module_type": "robot",
+      "display_name": "Robot #5",
+      "cluster": [
+        "vacuum_cluster_2"
+      ]
+    },
+    {
+      "module_id": 149,
+      "module_type": "buffer",
+      "display_name": "Buffer #1",
+      "cluster": [
+        "vacuum_cluster_1",
+        "vacuum_cluster_2"
+      ]
+    },
+    {
+      "module_id": 150,
+      "module_type": "buffer",
+      "display_name": "Buffer #2",
+      "cluster": [
+        "vacuum_cluster_1",
+        "vacuum_cluster_2"
+      ]
+    }
+  ],
   "timetables": {},
   "flow_recipe_ids": [],
   "process_recipe_ids": []

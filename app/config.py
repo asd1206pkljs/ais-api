@@ -18,6 +18,27 @@ class Settings(BaseSettings):
 
     PASSWORD_RESET_TTL_MINUTES: int = 30
     PASSWORD_RESET_URL_BASE: str = "http://localhost:3000"
+    EMAIL_VERIFY_TTL_HOURS: int = 24
+    # Frontend base for the verification link; falls back to PASSWORD_RESET_URL_BASE.
+    EMAIL_VERIFY_URL_BASE: str = ""
+
+    # Access token is delivered as an HttpOnly cookie; a second, readable
+    # marker cookie only tells the UI that a session exists (carries no secret).
+    AUTH_COOKIE_NAME: str = "access_token"
+    LOGGED_IN_COOKIE_NAME: str = "logged_in"
+    COOKIE_SECURE: bool = True  # set false only for plain-http development hosts
+    COOKIE_SAMESITE: str = "lax"
+    COOKIE_DOMAIN: str = ""  # empty = host-only cookie
+
+    # Per-account lockout after repeated failed logins (in addition to per-IP rate limits).
+    LOGIN_MAX_FAILURES: int = 5
+    LOGIN_FAILURE_WINDOW_MINUTES: int = 15
+    LOGIN_LOCKOUT_MINUTES: int = 15
+
+    # Housekeeping: unverified sign-ups older than this are deleted.
+    PENDING_SIGNUP_TTL_HOURS: int = 72
+    CLEANUP_INTERVAL_MINUTES: int = 60
+    ENABLE_BACKGROUND_CLEANUP: bool = True
     EMAIL_BACKEND: str = "console"  # console | smtp
     EMAIL_FROM: str = "admin@chronoboost.io"
     CONTACT_INBOX_EMAIL: str = ""  # destination for contact-form submissions
@@ -36,6 +57,10 @@ class Settings(BaseSettings):
     @property
     def admin_emails(self) -> set[str]:
         return {e.strip().lower() for e in self.ADMIN_EMAILS.split(",") if e.strip()}
+
+    @property
+    def email_verify_url_base(self) -> str:
+        return self.EMAIL_VERIFY_URL_BASE or self.PASSWORD_RESET_URL_BASE
 
 
 settings = Settings()

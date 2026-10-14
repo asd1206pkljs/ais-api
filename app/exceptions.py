@@ -28,3 +28,18 @@ class ValidationError(Exception):
 class InsufficientCreditsError(Exception):
     def __init__(self, message: str = "크레딧이 부족합니다. 관리자에게 문의하세요."):
         super().__init__(message)
+
+
+class EmailNotVerifiedError(Exception):
+    def __init__(self, message: str = "Email not verified"):
+        super().__init__(message)
+
+
+class AccountLockedError(Exception):
+    def __init__(self, retry_after_seconds: int):
+        self.retry_after_seconds = max(1, int(retry_after_seconds))
+        minutes = -(-self.retry_after_seconds // 60)  # ceil
+        super().__init__(
+            f"Too many failed login attempts. Try again in {minutes} minute(s) "
+            "or reset your password."
+        )

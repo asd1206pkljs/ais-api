@@ -1,10 +1,11 @@
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
+from app.validators.email import NormalizedEmail
 from app.validators.password import validate_strong_password
 
 
 class ForgotPasswordRequest(BaseModel):
-    email: EmailStr
+    email: NormalizedEmail
 
 
 class ResetPasswordRequest(BaseModel):

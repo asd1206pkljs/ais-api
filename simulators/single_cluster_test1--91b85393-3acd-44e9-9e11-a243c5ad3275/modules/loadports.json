@@ -1,0 +1,29 @@
+[
+    {
+        "name": "loadport0",
+        "display_name": "LoadPort #1",
+        "module_id": 0,
+        "module_type": "loadport",
+        "transfer_module": "efem",
+        "door_open_timetable": null,
+        "door_close_timetable": null
+    },
+    {
+        "name": "loadport1",
+        "display_name": "LoadPort #2",
+        "module_id": 1,
+        "module_type": "loadport",
+        "transfer_module": "efem",
+        "door_open_timetable": null,
+        "door_close_timetable": null
+    },
+    {
+        "name": "loadport2",
+        "display_name": "LoadPort #3",
+        "module_id": 2,
+        "module_type": "loadport",
+        "transfer_module": "efem",
+        "door_open_timetable": null,
+        "door_close_timetable": null
+    }
+]

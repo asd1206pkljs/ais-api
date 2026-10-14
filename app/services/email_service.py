@@ -51,6 +51,45 @@ def _send_via_smtp(msg: EmailMessage) -> None:
         smtp.send_message(msg)
 
 
+def _build_verification_message(to_email: str, verify_url: str) -> EmailMessage:
+    msg = EmailMessage()
+    msg["Subject"] = "[ChronoBoost] Verify your email address"
+    msg["From"] = settings.EMAIL_FROM
+    msg["To"] = to_email
+    msg.set_content(
+        "Thanks for signing up for ChronoBoost.\n\n"
+        "To activate your account, confirm your email address by following this "
+        f"link (expires in {settings.EMAIL_VERIFY_TTL_HOURS} hours):\n\n"
+        f"{verify_url}\n\n"
+        "If you didn't create an account, you can ignore this email."
+    )
+    return msg
+
+
+def send_verification_email(to_email: str, verify_url: str) -> None:
+    """Send the sign-up verification link.
+
+    Raises RuntimeError when no working backend is configured, so that
+    registration fails loudly instead of leaving an account nobody can verify.
+    """
+    backend = settings.EMAIL_BACKEND.lower()
+    if backend == "console":
+        logger.info(
+            "Verification email (console backend)\n  to: %s\n  link: %s",
+            to_email,
+            verify_url,
+        )
+        return
+    if backend == "smtp":
+        if not settings.SMTP_HOST:
+            logger.error("EMAIL_BACKEND=smtp but SMTP_HOST is not configured")
+            raise RuntimeError("Email backend is not configured")
+        _send_via_smtp(_build_verification_message(to_email, verify_url))
+        return
+    logger.warning("Unknown EMAIL_BACKEND: %s — verification email not sent", backend)
+    raise RuntimeError("Email backend is not configured")
+
+
 def _build_contact_message(
     *,
     to_email: str,

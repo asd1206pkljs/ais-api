@@ -1,0 +1,167 @@
+{
+  "equipment_name": "single_cluster_test1",
+  "cluster_type": "single_cluster",
+  "modules": [
+    {
+      "module_id": 151,
+      "module_type": "loadport",
+      "display_name": "LoadPort #1",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 152,
+      "module_type": "loadport",
+      "display_name": "LoadPort #2",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 153,
+      "module_type": "loadport",
+      "display_name": "LoadPort #3",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 154,
+      "module_type": "aligner",
+      "display_name": "Aligner #1",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 155,
+      "module_type": "robot",
+      "display_name": "Robot #1",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 156,
+      "module_type": "loadlock",
+      "display_name": "LoadLock #1",
+      "cluster": [
+        "efem",
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 157,
+      "module_type": "loadlock",
+      "display_name": "LoadLock #2",
+      "cluster": [
+        "efem",
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 158,
+      "module_type": "robot",
+      "display_name": "Robot #2",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 159,
+      "module_type": "robot",
+      "display_name": "Robot #3",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 160,
+      "module_type": "process_module",
+      "display_name": "Process Module #1",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 161,
+      "module_type": "process_module",
+      "display_name": "Process Module #2",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 162,
+      "module_type": "process_module",
+      "display_name": "Process Module #3",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 163,
+      "module_type": "process_module",
+      "display_name": "Process Module #4",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 164,
+      "module_type": "process_module",
+      "display_name": "Process Module #5",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 165,
+      "module_type": "process_module",
+      "display_name": "Process Module #6",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 166,
+      "module_type": "process_module",
+      "display_name": "Process Module #7",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 167,
+      "module_type": "process_module",
+      "display_name": "Process Module #8",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 168,
+      "module_type": "process_module",
+      "display_name": "Process Module #9",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 169,
+      "module_type": "process_module",
+      "display_name": "Process Module #10",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    }
+  ],
+  "timetables": {},
+  "flow_recipe_ids": [
+    "93a3b9aa-36fd-4183-8651-026547ab8df6"
+  ],
+  "process_recipe_ids": [
+    "bd32c5ad-d9bb-423e-a8b2-dbb78c75c29c"
+  ]
+}

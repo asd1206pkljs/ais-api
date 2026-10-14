@@ -1,0 +1,8 @@
+{
+    "eqp_name": "single_cluster_test1",
+    "use_same_recipe_in_lot": true,
+    "num_loadports": 3,
+    "num_loadlocks": 2,
+    "max_wafer_count": 25,
+    "max_proceed_time": 10
+}

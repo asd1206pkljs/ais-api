@@ -1,3 +1,4 @@
+import logging
 import uuid
 from datetime import datetime, timedelta, timezone
 from urllib.parse import quote
@@ -6,10 +7,13 @@ from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
-from app.exceptions import NotFoundError, ValidationError
+from app.exceptions import ValidationError
 from app.repositories.user_repository import UserRepository
 from app.services.auth_service import hash_password
 from app.services.email_service import send_password_reset_email
+from app.services.login_throttle_service import LoginThrottleService
+
+logger = logging.getLogger(__name__)
 
 PURPOSE = "pwd_reset"
 PWD_PREFIX_LEN = 16
@@ -37,69 +41,58 @@ def _issue_token(user_id: uuid.UUID, password_hash: str) -> str:
     return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
 
-class EmailNotRegisteredError(NotFoundError):
-    """Raised when password-reset is requested for an unknown email."""
-
-    def __init__(self):
-        # Skip parent's auto-formatted message; use a stable code-friendly string.
-        Exception.__init__(self, "Email not registered")
-        self.resource = "User"
-        self.resource_id = ""
-
-
 class PasswordResetService:
-    def __init__(self, repo: UserRepository):
+    def __init__(self, repo: UserRepository, throttle: LoginThrottleService):
         self._repo = repo
+        self._throttle = throttle
 
     async def request_reset(self, session: AsyncSession, email: str) -> None:
-        """Send a password-reset link to the email.
+        """Send a password-reset link if a verified account exists for `email`.
 
-        Raises EmailNotRegisteredError if no account exists for the email.
+        Silently does nothing otherwise (unknown or unverified email) so the
+        endpoint cannot be used to discover which emails are registered.
         """
         user = await self._repo.find_by_email(session, email)
         if user is None:
-            raise EmailNotRegisteredError()
+            logger.info("Password reset requested for unknown/unverified email")
+            return
         token = _issue_token(user.user_id, user.user_password)
-        reset_url = _build_reset_url(token)
-        send_password_reset_email(user.user_email, reset_url)
+        send_password_reset_email(user.user_email, _build_reset_url(token))
 
     async def consume_token(
         self, session: AsyncSession, token: str, new_password: str
     ) -> None:
-        """Validate the reset token and update the user's password.
+        """Validate the reset token and set the new password.
 
+        Also invalidates every outstanding access token (token_version bump)
+        and clears any login lockout, so the legitimate owner regains access.
         Raises ValidationError on any failure (expired, malformed, already used,
         or password already changed since the link was issued).
         """
+        user_id, prefix = self._decode(token)
+        user = await self._repo.find_by_id(session, user_id)
+        if user is None or _password_prefix(user.user_password) != prefix:
+            # Unknown user, or password already changed — token is stale.
+            raise ValidationError("Invalid or expired reset link")
+
+        await self._repo.update(session, user_id, {
+            "user_password": hash_password(new_password),
+            "token_version": user.token_version + 1,
+        })
+        await self._throttle.clear(session, user.user_email)
+
+    @staticmethod
+    def _decode(token: str) -> tuple[uuid.UUID, str]:
         try:
             payload = jwt.decode(
-                token,
-                settings.JWT_SECRET_KEY,
-                algorithms=[settings.JWT_ALGORITHM],
+                token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
             )
         except JWTError:
             raise ValidationError("Invalid or expired reset link")
-
-        if payload.get("purpose") != PURPOSE:
+        sub, prefix = payload.get("sub"), payload.get("pwd_prefix")
+        if payload.get("purpose") != PURPOSE or not sub or not prefix:
             raise ValidationError("Invalid or expired reset link")
-
-        sub = payload.get("sub")
-        prefix = payload.get("pwd_prefix")
-        if not sub or not prefix:
-            raise ValidationError("Invalid or expired reset link")
-
         try:
-            user_id = uuid.UUID(sub)
+            return uuid.UUID(sub), prefix
         except ValueError:
             raise ValidationError("Invalid or expired reset link")
-
-        user = await self._repo.find_by_id(session, user_id)
-        if user is None:
-            raise ValidationError("Invalid or expired reset link")
-        if _password_prefix(user.user_password) != prefix:
-            # Password was already changed — token is stale.
-            raise ValidationError("Invalid or expired reset link")
-
-        await self._repo.update(
-            session, user_id, {"user_password": hash_password(new_password)}
-        )

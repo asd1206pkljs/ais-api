@@ -1,0 +1,119 @@
+{
+  "equipment_name": "test_eqp",
+  "cluster_type": "single_cluster",
+  "modules": [
+    {
+      "module_id": 194,
+      "module_type": "loadport",
+      "display_name": "LoadPort #1",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 195,
+      "module_type": "loadport",
+      "display_name": "LoadPort #2",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 196,
+      "module_type": "loadport",
+      "display_name": "LoadPort #3",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 197,
+      "module_type": "loadlock",
+      "display_name": "LoadLock #1",
+      "cluster": [
+        "efem",
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 198,
+      "module_type": "loadlock",
+      "display_name": "LoadLock #2",
+      "cluster": [
+        "efem",
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 199,
+      "module_type": "process_module",
+      "display_name": "Process Module #1",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 200,
+      "module_type": "process_module",
+      "display_name": "Process Module #2",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 201,
+      "module_type": "process_module",
+      "display_name": "Process Module #3",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 202,
+      "module_type": "process_module",
+      "display_name": "Process Module #4",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 203,
+      "module_type": "aligner",
+      "display_name": "Aligner #1",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 204,
+      "module_type": "robot",
+      "display_name": "Robot #1",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 205,
+      "module_type": "robot",
+      "display_name": "Robot #2",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 206,
+      "module_type": "robot",
+      "display_name": "Robot #3",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    }
+  ],
+  "timetables": {},
+  "flow_recipe_ids": [
+    "709ec3da-2b4b-484a-bd1f-2d252fb47034"
+  ],
+  "process_recipe_ids": [
+    "f58d1e8a-b442-4d67-beca-a2511e314d29"
+  ]
+}

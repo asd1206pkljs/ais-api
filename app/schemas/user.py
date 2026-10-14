@@ -1,14 +1,15 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.validators.email import NormalizedEmail
 from app.validators.password import validate_strong_password
 
 
 class UserCreate(BaseModel):
     user_name: str = Field(..., min_length=1, max_length=255)
-    user_email: EmailStr
+    user_email: NormalizedEmail
     user_password: str = Field(..., min_length=8)
     user_company: str | None = Field(None, max_length=255)
 
@@ -26,6 +27,7 @@ class UserRead(BaseModel):
     user_email: str
     user_company: str | None
     user_credits: int
+    approved: bool
     joined_at: datetime
     last_login_at: datetime | None
 

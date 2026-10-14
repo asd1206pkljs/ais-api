@@ -17,6 +17,19 @@ class EquipmentRepository(BaseRepository[Equipment]):
         )
         return result.scalar_one_or_none()
 
+    async def find_all(
+        self, session: AsyncSession, skip: int = 0, limit: int = 100
+    ) -> list[Equipment]:
+        # admin 목록 조회 경로. soft-delete(save_status == 'deleted') 된 장비는 제외한다.
+        # (base.find_all 은 필터가 없어, 오버라이드하지 않으면 admin 에게 삭제 장비가 되살아난다)
+        result = await session.execute(
+            select(Equipment)
+            .where(Equipment.save_status != 'deleted')
+            .offset(skip)
+            .limit(limit)
+        )
+        return list(result.scalars().all())
+
     async def find_by_owner(
         self, session: AsyncSession, owner_id: uuid.UUID, skip: int = 0, limit: int = 100
     ) -> list[Equipment]:

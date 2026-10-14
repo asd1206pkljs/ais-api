@@ -17,6 +17,96 @@
       "cluster": [
         "efem"
       ]
+    },
+    {
+      "module_id": 119,
+      "module_type": "loadport",
+      "display_name": "LoadPort #3",
+      "cluster": [
+        "efem"
+      ]
+    },
+    {
+      "module_id": 120,
+      "module_type": "loadlock",
+      "display_name": "LoadLock #1",
+      "cluster": [
+        "efem",
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 121,
+      "module_type": "loadlock",
+      "display_name": "LoadLock #2",
+      "cluster": [
+        "efem",
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 122,
+      "module_type": "process_module",
+      "display_name": "Process Module #1",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 123,
+      "module_type": "process_module",
+      "display_name": "Process Module #2",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 124,
+      "module_type": "process_module",
+      "display_name": "Process Module #3",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 125,
+      "module_type": "process_module",
+      "display_name": "Process Module #4",
+      "cluster": [
+        "vacuum_cluster_1"
+      ]
+    },
+    {
+      "module_id": 126,
+      "module_type": "process_module",
+      "display_name": "Process Module #5",
+      "cluster": [
+        "vacuum_cluster_2"
+      ]
+    },
+    {
+      "module_id": 127,
+      "module_type": "process_module",
+      "display_name": "Process Module #6",
+      "cluster": [
+        "vacuum_cluster_2"
+      ]
+    },
+    {
+      "module_id": 128,
+      "module_type": "process_module",
+      "display_name": "Process Module #7",
+      "cluster": [
+        "vacuum_cluster_2"
+      ]
+    },
+    {
+      "module_id": 129,
+      "module_type": "process_module",
+      "display_name": "Process Module #8",
+      "cluster": [
+        "vacuum_cluster_2"
+      ]
     }
   ],
   "timetables": {},

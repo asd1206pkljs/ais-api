@@ -618,6 +618,16 @@ class EqpModelGenerator:
                     elif api_id in self.engine_name:
                         put_data[self.engine_name[api_id]] = t
 
+            # 같은 loadlock의 inslot <-> outslot 이동은 0초.
+            # (inslot/outslot 은 사용자 편의상 나눈 논리 위치일 뿐, 물리적으로
+            #  같은 loadlock 이므로 robot 이동 시간이 없음. moveTimes 에 loadlock
+            #  자기 자신 쌍이 없어 default 로 남던 것을 명시적으로 0 처리.)
+            for inslot, outslot in self.loadlock_pairs.values():
+                if inslot in move_data and outslot in move_data[inslot]:
+                    move_data[inslot][outslot] = [[0.0], [0.0]]
+                if outslot in move_data and inslot in move_data[outslot]:
+                    move_data[outslot][inslot] = [[0.0], [0.0]]
+
             move_rel = f"modules/timetables/{name}-move.json"
             get_rel = f"modules/timetables/{name}-get.json"
             put_rel = f"modules/timetables/{name}-put.json"

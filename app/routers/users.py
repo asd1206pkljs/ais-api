@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import get_current_user, get_db
 from app.middleware import limiter
+from app.repositories.login_attempt_repository import LoginAttemptRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.common import APIResponse
 from app.schemas.user import (
@@ -13,14 +14,23 @@ from app.schemas.user import (
     UserRead,
     UserUpdate,
 )
+from app.services.auth_cookie import clear_auth_cookies, set_auth_cookies
+from app.services.login_throttle_service import LoginThrottleService
 from app.services.user_service import UserService
 
 router = APIRouter(prefix="/users", tags=["users"])
 _repo = UserRepository()
+_throttle = LoginThrottleService(LoginAttemptRepository())
 
 
 def _get_service() -> UserService:
-    return UserService(_repo)
+    return UserService(_repo, _throttle)
+
+
+async def _refresh_session(svc: UserService, db: AsyncSession, response: Response, user_id) -> None:
+    """After a password change the old token_version is dead; give this
+    browser a fresh token so only *other* sessions are logged out."""
+    set_auth_cookies(response, await svc.issue_access_token(db, user_id))
 
 
 @router.get("/me", response_model=APIResponse[UserRead])
@@ -36,12 +46,15 @@ async def get_me(
 @limiter.limit("30/minute")
 async def update_me(
     request: Request,
+    response: Response,
     body: UserUpdate,
     db: AsyncSession = Depends(get_db),
     current_user: UserRead = Depends(get_current_user),
 ):
     svc = _get_service()
     updated = await svc.update(db, current_user.user_id, body)
+    if body.user_password is not None:
+        await _refresh_session(svc, db, response, current_user.user_id)
     return APIResponse.ok(updated)
 
 
@@ -49,11 +62,13 @@ async def update_me(
 @limiter.limit("10/minute")
 async def delete_me(
     request: Request,
+    response: Response,
     db: AsyncSession = Depends(get_db),
     current_user: UserRead = Depends(get_current_user),
 ):
     svc = _get_service()
     await svc.delete(db, current_user.user_id)
+    clear_auth_cookies(response)
     return APIResponse.ok(None)
 
 
@@ -61,6 +76,7 @@ async def delete_me(
 @limiter.limit("10/minute")
 async def change_password(
     request: Request,
+    response: Response,
     body: PasswordChange,
     db: AsyncSession = Depends(get_db),
     current_user: UserRead = Depends(get_current_user),
@@ -69,6 +85,7 @@ async def change_password(
     updated = await svc.change_password(
         db, current_user.user_id, body.current_password, body.new_password
     )
+    await _refresh_session(svc, db, response, current_user.user_id)
     return APIResponse.ok(updated)
 
 

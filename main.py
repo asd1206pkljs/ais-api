@@ -1,5 +1,9 @@
+import asyncio
+from contextlib import asynccontextmanager, suppress
+
 from fastapi import FastAPI
 
+from app.config import settings
 from app.exception_handlers import setup_exception_handlers
 from app.middleware import setup_middleware
 from app.routers import (
@@ -13,6 +17,20 @@ from app.routers import (
     simulators,
     users,
 )
+from app.tasks.cleanup import start_background_cleanup
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Hourly purge of expired pending sign-ups, revoked tokens and lockout counters.
+    cleanup = start_background_cleanup() if settings.ENABLE_BACKGROUND_CLEANUP else None
+    try:
+        yield
+    finally:
+        if cleanup is not None:
+            cleanup.cancel()
+            with suppress(asyncio.CancelledError):
+                await cleanup
 
 
 def create_app() -> FastAPI:
@@ -20,6 +38,7 @@ def create_app() -> FastAPI:
         title="AIS Equipment Layout API",
         description="API server for semiconductor equipment layout management",
         version="1.0.0",
+        lifespan=lifespan,
     )
 
     setup_middleware(app)
